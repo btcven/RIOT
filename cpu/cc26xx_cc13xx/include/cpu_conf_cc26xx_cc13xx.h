@@ -24,6 +24,7 @@
 
 #include "cc26xx_cc13xx.h"
 
+#include "cc26xx_cc13xx_aon_rtc.h"
 #include "cc26xx_cc13xx_ccfg.h"
 #include "cc26xx_cc13xx_gpio.h"
 #include "cc26xx_cc13xx_gpt.h"
