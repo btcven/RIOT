@@ -200,6 +200,8 @@ typedef struct {
  * @brief   PRCM register values
  * @{
  */
+#define RFCCLKG_CLK_EN 0x1
+
 #define CLKLOADCTL_LOAD        0x1
 #define CLKLOADCTL_LOADDONE    0x2
 
@@ -223,10 +225,12 @@ typedef struct {
 /** @ingroup cpu_specific_peripheral_memory_map
   * @{
   */
-#define PRCM_BASE       0x40082000 /**< PRCM base address */
+#define PRCM_BASE        0x40082000 /**< PRCM base address */
+#define PRCM_NONBUF_BASE 0x60082000 /**< PRCM non-buffered base address */
 /*@}*/
 
-#define PRCM ((prcm_regs_t *) (PRCM_BASE)) /**< PRCM register bank */
+#define PRCM        ((prcm_regs_t *) (PRCM_BASE)) /**< PRCM register bank */
+#define PRCM_NONBUF ((prcm_regs_t *) (PRCM_NONBUF_BASE)) /**< PRCM non-buffered register bank */
 
 #ifdef __cplusplus
 } /* end extern "C" */
