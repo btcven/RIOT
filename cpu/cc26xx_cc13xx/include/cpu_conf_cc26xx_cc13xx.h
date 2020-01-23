@@ -31,6 +31,7 @@
 #include "cc26xx_cc13xx_i2c.h"
 #include "cc26xx_cc13xx_ioc.h"
 #include "cc26xx_cc13xx_rfc_dbell.h"
+#include "cc26xx_cc13xx_rfc_pwr.h"
 #include "cc26xx_cc13xx_uart.h"
 #include "cc26xx_cc13xx_vims.h"
 #include "cc26xx_cc13xx_wdt.h"
