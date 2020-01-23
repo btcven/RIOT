@@ -45,6 +45,13 @@ typedef struct {
  *
  * @{
  */
+#define CMDR_DIR_CMD(id) (((id) << 16) | 1)
+#define CMDR_DIR_CMD_2BYTE(id, par) (((id) << 16) | ((par) & 0xFFFC) | 1)
+
+#define CMDSTA_RESULT_mask                 0x000000FF
+#define CMDSTA_RESULT_PENDING              0x00
+#define CMDSTA_RESULT_DONE                 0x01
+
 #define RFHWIFG_RATCH7                     0x00080000
 #define RFHWIFG_RATCH6                     0x00040000
 #define RFHWIFG_RATCH5                     0x00020000
@@ -323,10 +330,12 @@ typedef struct {
 /** @ingroup cpu_specific_peripheral_memory_map
   * @{
   */
-#define RFC_DBELL_BASE      (PERIPH_BASE + 0x41000) /**< RFC_DBELL base address */
+#define RFC_DBELL_BASE        (PERIPH_BASE + 0x41000) /**< RFC_DBELL base address */
+#define RFC_DBELL_NONBUF_BASE (PERIPH_NONBUF_BASE + 0x41000) /**< RFC_DBELL non-buffered base address */
 /** @} */
 
-#define RFC_DBELL           ((rfc_dbell_regs_t *) (RFC_DBELL_BASE)) /**< RFC_DBELL register bank */
+#define RFC_DBELL             ((rfc_dbell_regs_t *) (RFC_DBELL_BASE)) /**< RFC_DBELL register bank */
+#define RFC_DBELL_NONBUF      ((rfc_dbell_regs_t *) (RFC_DBELL_NONBUF_BASE)) /**< RFC_DBELL non-buffered register bank */
 
 #ifdef __cplusplus
 }
