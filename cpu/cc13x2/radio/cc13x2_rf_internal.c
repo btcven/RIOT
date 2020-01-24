@@ -130,6 +130,7 @@ int cc13x2_rf_send_cmd(uint32_t cmd, uint32_t *status)
     int timeout_count = 0;
     do {
         *status = RFC_DBELL->CMDSTA;
+        DEBUG("cc13x2_rf_send_cmd: CMDSTA = %08lx\n", *status);
         if (++timeout_count > 50000) {
             DEBUG("command 0x%08lx timed out\n", cmd);
             if(!interrupts_disabled) {
@@ -139,9 +140,13 @@ int cc13x2_rf_send_cmd(uint32_t cmd, uint32_t *status)
         }
     } while((*status & CMDSTA_RESULT_mask) == CMDSTA_RESULT_PENDING);
 
+    DEBUG("cc13x2_rf_send_cmd: enable interrupts\n");
+
     if (!interrupts_disabled) {
         irq_enable();
     }
+
+    DEBUG("CMDSTA.RESULT = %02lx\n", *status & CMDSTA_RESULT_mask);
 
     /* The command is no longer pending. It is either completed successfully or
      * with error */

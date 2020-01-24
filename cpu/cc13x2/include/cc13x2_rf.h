@@ -32,6 +32,11 @@ extern "C" {
 #define FACTORY_ADDR1 (CCFG->IEEE_MAC_1) /**< Factory generated IEEE 802.15.4 address part 2 */
 
 /**
+ * @brief Setup RF netdev interface
+ */
+void cc13x2_rf_setup(void);
+
+/**
  * @brief Get IEEE 802.15.4 long address
  */
 uint64_t cc13x2_rf_get_addr_long(void);
