@@ -136,6 +136,19 @@ typedef struct {
     reg32_t DAC_CAL3; /**< Internal */
 } fcfg_regs_t;
 
+/**
+ * @brief   USER_ID register values
+ * @{
+ */
+#define FCFG1_USER_ID_PG_REV_M                                      0xF0000000
+#define FCFG1_USER_ID_VER_M                                         0x0C000000
+#define FCFG1_USER_ID_PA                                            0x02000000
+#define FCFG1_USER_ID_CC13                                          0x00800000
+#define FCFG1_USER_ID_SEQUENCE_M                                    0x00780000
+#define FCFG1_USER_ID_PKG_M                                         0x00070000
+#define FCFG1_USER_ID_PROTOCOL_M                                    0x0000F000
+/** @} */
+
 #define FCFG ((fcfg_regs_t *) (FCFG_BASE)) /**< FCFG register bank */
 
 #ifdef __cplusplus

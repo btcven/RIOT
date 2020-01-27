@@ -26,6 +26,75 @@
 
 static rfc_radio_op_t *_last_radio_op;
 
+static volatile __attribute__ ((aligned(4))) rfc_cmd_prop_radio_div_setup_t _cmd_prop_radio_div_setup;
+
+int_fast32_t cc13x2_rf_chip_type(void)
+{
+    uint32_t user_id = FCFG->USER_ID;
+
+    uint32_t protocol  = ((user_id & FCFG1_USER_ID_PROTOCOL_M) >> 12);
+    uint32_t cc13 = ((user_id & FCFG1_USER_ID_CC13) >> 23);
+    uint32_t pa = ((user_id & FCFG1_USER_ID_PA) >> 25);
+
+    switch (protocol) {
+        case 0xF:
+            if (cc13) {
+                if (pa) {
+                    return CHIP_TYPE_CC1352P;
+                }
+                else {
+                    return CHIP_TYPE_CC1352;
+                }
+            }
+
+            return CHIP_TYPE_CC2652;
+
+        case 0x9:
+            if (pa) {
+                return CHIP_TYPE_CC2642;
+            }
+
+            return CHIP_TYPE_UNKNOWN;
+
+        case 0x8: /* Propietary mode only */
+            return CHIP_TYPE_CC1312;
+
+        default:
+            break;
+    }
+
+    /* Couldn't identify the chip */
+    return CHIP_TYPE_UNKNOWN;
+}
+
+int_fast32_t cc13x2_rf_mode_sel(void)
+{
+    /* TODO: avoid runtime check of chip type, do this at compile-time instead
+     */
+    switch (cc13x2_rf_chip_type()) {
+        case CHIP_TYPE_UNKNOWN:
+            return -1;
+
+        case CHIP_TYPE_CC1352P:
+            return -1;
+
+        case CHIP_TYPE_CC1312:
+            PRCM->RFCMODESEL = 0; /* auto mode, sets mode to propietary mode */
+            return 0;
+
+        case CHIP_TYPE_CC2642:
+            return -1;
+
+        case CHIP_TYPE_CC2652:
+            return -1;
+
+        default:
+            return -1;
+    }
+
+    return -1;
+}
+
 void cc13x2_rf_power_up(void)
 {
     unsigned int interrupts_disabled = irq_disable();
@@ -39,6 +108,11 @@ void cc13x2_rf_power_up(void)
 
     /* Set RFC boot parameters */
     PRCM->RFCBITS = RF_BOOT0;
+
+    if (cc13x2_rf_mode_sel() != 0) {
+        DEBUG_PUTS("cc13x2_rf_mode_sel: failed");
+        return;
+    }
 
     /* Enable RTC_UPD clock */
     AON_RTC->CTL |= CTL_RTC_UPD_EN;
