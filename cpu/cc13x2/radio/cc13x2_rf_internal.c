@@ -96,6 +96,29 @@ int_fast32_t cc13x2_rf_mode_sel(void)
     return -1;
 }
 
+void cc13x2_rf_setup_int(void)
+{
+    if (!prcm_rf_ready()) {
+        return;
+    }
+
+    unsigned int interrupts_disabled = irq_disable();
+
+    /* Set all interrupt channels to CPE0 channel, error to CPE1 */
+    RFC_DBELL_NONBUF->RFCPEISL = RFCPEISL_INTERNAL_ERROR;
+    RFC_DBELL_NONBUF->RFCPEIEN = RFCPEISL_LAST_COMMAND_DONE |
+                                 RFCPEISL_LAST_FG_COMMAND_DONE;
+
+    NVIC_ClearPendingIRQ(RF_CPE0_IRQN);
+    NVIC_ClearPendingIRQ(RF_CPE1_IRQN);
+    NVIC_EnableIRQ(RF_CPE0_IRQN);
+    NVIC_EnableIRQ(RF_CPE1_IRQN);
+
+    if (!interrupts_disabled) {
+        irq_enable();
+    }
+}
+
 void cc13x2_rf_power_up(void)
 {
     unsigned int interrupts_disabled = irq_disable();
@@ -164,6 +187,8 @@ void cc13x2_rf_power_up(void)
 
     /* Reset interrupt flags */
     RFC_DBELL->RFCPEIFG = 0;
+
+    cc13x2_rf_setup_int();
 
     /* Ping the CPE to see if it's alive */
     uint32_t res = 0;

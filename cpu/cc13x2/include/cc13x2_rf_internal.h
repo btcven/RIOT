@@ -57,6 +57,11 @@ int_fast32_t cc13x2_rf_chip_type(void);
  */
 int_fast32_t cc13x2_rf_mode_sel(void);
 
+/**
+ * @brief   Setup CPE0/CPE1 interrupts
+ */
+void cc13x2_rf_setup_int(void);
+
 void cc13x2_rf_power_up(void);
 int cc13x2_rf_send_cmd(uint32_t cmd, uint32_t *result);
 
