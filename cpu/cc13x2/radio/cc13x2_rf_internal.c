@@ -14,6 +14,7 @@
  * @brief           CC13x2 radio driver
  *
  * @author          Jean Pierre Dudey <jeandudey@hotmail.com>
+ * @}
  */
 
 #include "cpu.h"
@@ -100,6 +101,14 @@ void cc13x2_rf_power_up(void)
     unsigned int interrupts_disabled = irq_disable();
 
     DEBUG_PUTS("Initializing CC13x2 radio");
+
+    /* Request HF XOSC as the source for the HF clock. Needed before we can use
+     * FS. It takes a while before it's ready so it will not perform the actual
+     * switch, we'll do that later and set up stuff while the HF gets ready */
+    if (osc_get_clock_source(OSC_SRC_CLK_HF) != OSC_XOSC_HF) {
+        /* Peform the request to HF XOSC */
+        osc_set_clock_source(OSC_SRC_CLK_HF, OSC_XOSC_HF);
+    }
 
     NVIC_ClearPendingIRQ(RF_CPE0_IRQN);
     NVIC_ClearPendingIRQ(RF_CPE1_IRQN);
