@@ -193,7 +193,7 @@ int cc13x2_rf_send_cmd(uint32_t cmd, uint32_t *status)
     unsigned int interrupts_disabled = irq_disable();
 
     /* Check if the RF Core is on */
-    if ((PRCM->PDSTAT1 & PDSTAT1_RFC_ON) == 0) {
+    if (!prcm_rf_ready()) {
         DEBUG_PUTS("RF is off!");
         if (!interrupts_disabled) {
             irq_enable();

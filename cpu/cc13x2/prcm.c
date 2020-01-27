@@ -23,6 +23,11 @@
 
 #include "cc13x2_prcm.h"
 
+int_fast8_t prcm_rf_ready(void)
+{
+    return (PRCM->PDSTAT1 & PDSTAT1_RFC_ON) != 0;
+}
+
 void prcm_set_rfc_powerdomain_on(void)
 {
     PRCM->PDCTL0RFC = 1;

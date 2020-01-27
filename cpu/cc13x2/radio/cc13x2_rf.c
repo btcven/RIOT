@@ -28,7 +28,7 @@ void cc13x2_rf_init(void)
     unsigned int interrupts_disabled = irq_disable();
 
     /* Check if the RF Core is off and initialize it if it's off */
-    if ((PRCM->PDSTAT1 & PDSTAT1_RFC_ON) == 0) {
+    if (!prcm_rf_ready()) {
         cc13x2_rf_power_up();
     }
 

@@ -249,6 +249,13 @@ typedef struct {
 #define PRCM_NONBUF ((prcm_regs_t *) (PRCM_NONBUF_BASE)) /**< PRCM non-buffered register bank */
 
 /**
+ * @brief   Is RF ready?
+ *
+ * @return  1 if ready, 0 if not
+ */
+int_fast8_t prcm_rf_ready(void);
+
+/**
  * @brief   Set RF Core power domain to "on"
  */
 void prcm_set_rfc_powerdomain_on(void);
