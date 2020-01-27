@@ -25,7 +25,9 @@
 #include "cpu_conf_cc26xx_cc13xx.h"
 
 #include "cc13x2_aux.h"
+#include "cc13x2_ddi.h"
 #include "cc13x2_fcfg.h"
+#include "cc13x2_osc.h"
 #include "cc13x2_prcm.h"
 
 #ifdef __cplusplus
