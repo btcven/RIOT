@@ -52,7 +52,11 @@ typedef struct {
  * @{
  */
 #define DDI_0_OSC_CTL0_SCLK_HF_SRC_SEL              0x00000001
+#define DDI_0_OSC_CTL0_SCLK_HF_SRC_SEL_M            0x00000001
+#define DDI_0_OSC_CTL0_SCLK_HF_SRC_SEL_S            0
 #define DDI_0_OSC_CTL0_SCLK_LF_SRC_SEL              0x0000000C
+#define DDI_0_OSC_CTL0_SCLK_LF_SRC_SEL_M            0x0000000C
+#define DDI_0_OSC_CTL0_SCLK_LF_SRC_SEL_S            2
 #define DDI_0_OSC_CTL0_ACLK_TDC_SRC_SEL             0x00000180
 #define DDI_0_OSC_CTL0_CLK_LOSS_EN                  0x00000200 /* enable clock loss detection */
 #define DDI_0_OSC_CTL0_XOSC_LF_DIG_BYPASS           0x00000400 /* bypass XOSC_LF and use digital input clock from AON foor xosx_lf (precuations in datasheet) */
@@ -65,6 +69,16 @@ typedef struct {
 #define DDI_0_OSC_CTL0_BYPASS_RCOSC_LF_CLK_QUAL     0x10000000
 #define DDI_0_OSC_CTL0_BYPASS_XOSC_LF_CLK_QUAL      0x20000000
 #define DDI_0_OSC_CTL0_XTAL_IS_24M                  0x80000000
+/** @} */
+
+/**
+ * @brief   DDI_0_STAT0 register values
+ * @{
+ */
+#define DDI_0_OSC_STAT0_SCLK_LF_SRC_M                               0x60000000
+#define DDI_0_OSC_STAT0_SCLK_LF_SRC_S                                       29
+#define DDI_0_OSC_STAT0_SCLK_HF_SRC_M                               0x10000000
+#define DDI_0_OSC_STAT0_SCLK_HF_SRC_S                                       28
 /** @} */
 
 /** @ingroup cpu_cc13x2_peripheral_memory_map
