@@ -136,20 +136,16 @@ void cc13x2_rf_power_up(void)
         osc_set_clock_source(OSC_SRC_CLK_HF, OSC_XOSC_HF);
     }
 
-    /* Set RF Core power domain to "on" */
-    PRCM->PDCTL0RFC = 1;
+    prcm_set_rfc_powerdomain_on();
 
     /* Wait until power domain is updated */
-    while ((PRCM->PDSTAT0 & PDSTAT0_RFC_ON) == 0
-        || (PRCM->PDSTAT1 & PDSTAT1_RFC_ON) == 0) {}
+    while (prcm_get_rfc_powerdomain_status()) {}
 
+    prcm_enable_rfc_domain();
+    prcm_set_load();
 
-    /* Enable RFC clock */
-    PRCM->RFCCLKG = RFCCLKG_CLK_EN;
-
-    /* Write CLKLOADCTL so RFC clock enable takes effect */
-    PRCM_NONBUF->CLKLOADCTL = CLKLOADCTL_LOAD;
-    while ((PRCM->CLKLOADCTL & CLKLOADCTL_LOADDONE) == 0) {}
+    /* Wait until RF Core domain is done */
+    while (!prcm_is_load_done()) {}
 
     /* Disable CPE interrupts */
     RFC_DBELL_NONBUF->RFCPEIFG = 0;

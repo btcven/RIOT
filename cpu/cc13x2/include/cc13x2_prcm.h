@@ -248,6 +248,35 @@ typedef struct {
 #define PRCM        ((prcm_regs_t *) (PRCM_BASE)) /**< PRCM register bank */
 #define PRCM_NONBUF ((prcm_regs_t *) (PRCM_NONBUF_BASE)) /**< PRCM non-buffered register bank */
 
+/**
+ * @brief   Set RF Core power domain to "on"
+ */
+void prcm_set_rfc_powerdomain_on(void);
+
+/**
+ * @brief   Get RF Core power domain status.
+ *
+ * @return  1 is RF Core is "on", 0 if it's "off"
+ */
+int_fast8_t prcm_get_rfc_powerdomain_status(void);
+
+/**
+ * @brief   Enable the RF Core power domain
+ */
+void prcm_enable_rfc_domain(void);
+
+/**
+ * @brief    Set clock load
+ */
+void prcm_set_load(void);
+
+/**
+ * @brief    Is clock load done?
+ *
+ * @return   1 if done, 0 if not
+ */
+int_fast8_t prcm_is_load_done(void);
+
 #ifdef __cplusplus
 } /* end extern "C" */
 #endif
