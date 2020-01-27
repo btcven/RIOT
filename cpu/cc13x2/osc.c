@@ -71,3 +71,37 @@ void osc_set_clock_source(uint32_t srcclk, uint32_t osc)
                               osc);
     }
 }
+
+void osc_hf_source_switch(void)
+{
+    /* Read target clock (lower half of the 32-bit CTL0 register) */
+    uint16_t hfsrc = DDI_0_OSC->CTL0 & DDI_0_OSC_CTL0_SCLK_HF_SRC_SEL_M;
+
+    /* If target clock source is RCOSC, change clock source for DCDC to RCOSC */
+    if (hfsrc == DDI_0_OSC_CTL0_SCLK_HF_SRC_SEL_RCOSC) {
+        /* Force DCDC to use RCOSC before switching SCLK_HF to RCOSC */
+        uint32_t regaddr = DDI0_OSC_BASE +
+                           DDI_MASK16B +
+                           (offsetof(ddi0_osc_regs_t, CTL0) << 1) + 4;
+        *(volatile uint32_t *)regaddr = DDI_0_OSC_CTL0_DCDC_SRC_SEL |
+                                        (DDI_0_OSC_CTL0_DCDC_SRC_SEL >> 16);
+
+        /* Dummy read to make sure the write propagated */
+        (volatile uint32_t)(DDI_0_OSC->CTL0);
+    }
+
+    /* Switch the HF clock source */
+    HARD_API->hf_source_safe_switch();
+
+    /* If target clock source is XOSC, change clock source for DCDC to
+     * "auto" */
+    if (hfsrc == DDI_0_OSC_CTL0_SCLK_HF_SRC_SEL_XOSC) {
+        /* Set DCDC clock source back to "auto" after SCLK_HF was switched to
+         * XOSC */
+        uint32_t regaddr = DDI0_OSC_BASE +
+                           DDI_MASK16B +
+                           (offsetof(ddi0_osc_regs_t, CTL0) << 1) + 4;
+
+        *(volatile uint32_t *) regaddr = DDI_0_OSC_CTL0_DCDC_SRC_SEL;
+    }
+}

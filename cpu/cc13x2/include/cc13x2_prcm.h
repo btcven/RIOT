@@ -54,6 +54,8 @@ typedef struct {
 #define DDI_0_OSC_CTL0_SCLK_HF_SRC_SEL              0x00000001
 #define DDI_0_OSC_CTL0_SCLK_HF_SRC_SEL_M            0x00000001
 #define DDI_0_OSC_CTL0_SCLK_HF_SRC_SEL_S            0
+#define DDI_0_OSC_CTL0_SCLK_HF_SRC_SEL_XOSC         0x00000001
+#define DDI_0_OSC_CTL0_SCLK_HF_SRC_SEL_RCOSC        0x00000000
 #define DDI_0_OSC_CTL0_SCLK_LF_SRC_SEL              0x0000000C
 #define DDI_0_OSC_CTL0_SCLK_LF_SRC_SEL_M            0x0000000C
 #define DDI_0_OSC_CTL0_SCLK_LF_SRC_SEL_S            2

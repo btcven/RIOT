@@ -29,6 +29,7 @@
 #include "cc13x2_fcfg.h"
 #include "cc13x2_osc.h"
 #include "cc13x2_prcm.h"
+#include "cc13x2_rom.h"
 
 #ifdef __cplusplus
 extern "C" {

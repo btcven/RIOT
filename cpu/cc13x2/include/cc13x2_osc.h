@@ -56,6 +56,11 @@ uint32_t osc_get_clock_source(uint32_t srcclk);
  */
 void osc_set_clock_source(uint32_t srcclk, uint32_t osc);
 
+/**
+ * @brief   Perform the switch of the HF input source
+ */
+void osc_hf_source_switch(void);
+
 #ifdef __cplusplus
 } /* end extern "C" */
 #endif

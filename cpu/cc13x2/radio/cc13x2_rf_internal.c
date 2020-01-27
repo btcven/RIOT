@@ -123,8 +123,18 @@ void cc13x2_rf_power_up(void)
         return;
     }
 
+    if (osc_get_clock_source(OSC_SRC_CLK_HF) != OSC_XOSC_HF) {
+        /* Peform the switch to HF XOSC, blocks until the switch is performed */
+        osc_hf_source_switch();
+    }
+
     /* Enable RTC_UPD clock */
     AON_RTC->CTL |= CTL_RTC_UPD_EN;
+
+    if (osc_get_clock_source(OSC_SRC_CLK_HF) != OSC_XOSC_HF) {
+        /* Peform the switch to HF XOSC */
+        osc_set_clock_source(OSC_SRC_CLK_HF, OSC_XOSC_HF);
+    }
 
     /* Set RF Core power domain to "on" */
     PRCM->PDCTL0RFC = 1;
