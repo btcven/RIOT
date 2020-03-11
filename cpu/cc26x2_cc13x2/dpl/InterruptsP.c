@@ -4,13 +4,17 @@
 
 #include <inc/hw_ints.h>
 
+#define ENABLE_DEBUG (1)
+#include "debug.h"
+
 dpl_handlers_t _dpl_handlers;
 
 #define DISPATCH(isr)                \
-    void isr(void)                 \
+    void isr(void)                   \
     {                                \
-        if (_dpl_handlers.isr) {  \
-            _dpl_handlers.isr();  \
+        DEBUG_PUTS("isr " #isr " called"); \
+        if (_dpl_handlers.isr) {     \
+            _dpl_handlers.isr();     \
         }                            \
         else {                       \
             dummy_handler_default(); \
