@@ -16,3 +16,6 @@ ifneq (,$(filter cc26x2_cc13x2_rf,$(USEMODULE)))
 endif
 
 include ${RIOTCPU}/cc26xx_cc13xx/Makefile.dep
+
+USEMODULE += cc26xx_cc13xx
+USEMODULE += cortexm_common

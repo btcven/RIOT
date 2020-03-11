@@ -46,6 +46,8 @@
 #include <driverlib/interrupt.h>
 #include <driverlib/rom.h>
 
+#include "InterruptsP.h"
+
 typedef struct _HwiP_Obj {
     uint32_t intNum;
     HwiP_Fxn fxn;
@@ -136,7 +138,6 @@ static HwiP_Obj* HwiP_dispatchTable[NUM_INTERRUPTS] = {
 
 int HwiP_swiPIntNum = INT_PENDSV;
 
-
 /*
  *  ======== HwiP_enable ========
  */
@@ -179,7 +180,7 @@ void HwiP_destruct(HwiP_Struct *handle)
     HwiP_Obj *obj = (HwiP_Obj *)handle;
 
     IntDisable(obj->intNum);
-    IntUnregister(obj->intNum);
+    dpl_unregister_handler(obj->intNum);
 }
 
 /*
@@ -253,7 +254,7 @@ HwiP_Handle HwiP_construct(HwiP_Struct *handle, int interruptNum,
             obj->arg = params->arg;
             obj->intNum = (uint32_t)interruptNum;
 
-            IntRegister((uint32_t)interruptNum, HwiP_dispatch);
+            dpl_register_handler((uint32_t)interruptNum, HwiP_dispatch);
             IntPrioritySet((uint32_t)interruptNum, (uint8_t)params->priority);
 
             if (params->enableInt) {
@@ -310,7 +311,7 @@ void HwiP_Params_init(HwiP_Params *params)
  */
 void HwiP_plug(int interruptNum, void *fxn)
 {
-    IntRegister((uint32_t)interruptNum, (void (*)(void))fxn);
+    dpl_register_handler((uint32_t)interruptNum, (void (*)(void))fxn);
 }
 
 /*
