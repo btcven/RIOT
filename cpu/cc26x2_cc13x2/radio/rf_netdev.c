@@ -27,20 +27,128 @@ void _irq_handler(void)
 
 static int _get(netdev_t *netdev, netopt_t opt, void *value, size_t max_len)
 {
-    (void)netdev;
-    (void)opt;
-    (void)value;
-    (void)max_len;
+    cc26x2_cc13x2_rf_t *dev = (cc26x2_cc13x2_rf_t *)netdev;
+
+    if (dev == NULL) {
+        return -ENODEV;
+    }
+
+    switch (opt) {
+        case NETOPT_ADDRESS:
+            if (max_len < sizeof(uint16_t)) {
+                return -EOVERFLOW;
+            }
+            else {
+                *(uint16_t*)value = 0;
+            }
+            return sizeof(uint16_t);
+
+        case NETOPT_ADDRESS_LONG:
+            if (max_len < sizeof(uint64_t)) {
+                return -EOVERFLOW;
+            }
+            else {
+                *(uint64_t*)value = 0;
+            }
+            return sizeof(uint64_t);
+
+        case NETOPT_AUTOACK:
+            return sizeof(netopt_enable_t);
+
+        case NETOPT_CHANNEL:
+            if (max_len < sizeof(uint16_t)) {
+                return -EOVERFLOW;
+            }
+            else {
+                *((uint16_t *)value) = 0;
+            }
+            return sizeof(uint16_t);
+
+        case NETOPT_CHANNEL_PAGE:
+            if (max_len < sizeof(uint16_t)) {
+                return -EOVERFLOW;
+            }
+            else {
+                *((uint16_t *)value) = 0;
+            }
+            return sizeof(uint16_t);
+
+        case NETOPT_DEVICE_TYPE:
+            if (max_len < sizeof(uint16_t)) {
+                return -EOVERFLOW;
+            }
+            else {
+                *((uint16_t *)value) = NETDEV_TYPE_IEEE802154;
+            }
+            return sizeof(uint16_t);
+
+        case NETOPT_IS_CHANNEL_CLR:
+            if (max_len < sizeof(netopt_enable_t)) {
+                return -EOVERFLOW;
+            }
+            else {
+                *((netopt_enable_t *)value) = NETOPT_DISABLE;
+            }
+            return sizeof(netopt_enable_t);
+
+        case NETOPT_IS_WIRED:
+            return -ENOTSUP;
+
+        case NETOPT_PROMISCUOUSMODE:
+            if (max_len < sizeof(netopt_enable_t)) {
+                return -EOVERFLOW;
+            }
+            else {
+                *((netopt_enable_t *)value) = NETOPT_ENABLE;
+            }
+            return sizeof(netopt_enable_t);
+
+        case NETOPT_STATE:
+            if (max_len < sizeof(netopt_state_t)) {
+                return -EOVERFLOW;
+            }
+            else {
+                *((netopt_state_t *)value) = 0;
+            }
+            return sizeof(netopt_state_t);
+
+        case NETOPT_TX_POWER:
+            if (max_len < sizeof(int16_t)) {
+                return -EOVERFLOW;
+            }
+            else {
+                *((uint16_t *)value) = 0;
+            }
+            return sizeof(uint16_t);
+
+        default:
+            break;
+    }
+
+    int res;
+
+    if (((res = netdev_ieee802154_get((netdev_ieee802154_t *)netdev, opt, value,
+                                      max_len)) >= 0) || (res != -ENOTSUP)) {
+        return res;
+    }
 
     return -ENOTSUP;
 }
 
 static int _set(netdev_t *netdev, netopt_t opt, const void *value, size_t value_len)
 {
-    (void)netdev;
-    (void)opt;
-    (void)value;
-    (void)value_len;
+    cc26x2_cc13x2_rf_t *dev = (cc26x2_cc13x2_rf_t *)netdev;
+
+    if (dev == NULL) {
+        return -ENODEV;
+    }
+
+    int res;
+
+    if (((res = netdev_ieee802154_set((netdev_ieee802154_t *)netdev, opt, value,
+                                      value_len)) >= 0) || (res != -ENOTSUP)) {
+        return res;
+    }
 
     return -ENOTSUP;
 }
@@ -85,8 +193,8 @@ const netdev_driver_t cc26x2_cc13x2_rf_driver = {
 
 void cc26x2_cc13x2_rf_setup(cc26x2_cc13x2_rf_t* dev)
 {
-    dev->rf_handle = cc26x2_cc13x2_rf_open();
-
     netdev_t *netdev = (netdev_t *)dev;
     netdev->driver = &cc26x2_cc13x2_rf_driver;
+
+    cc26x2_cc13x2_rf_init();
 }

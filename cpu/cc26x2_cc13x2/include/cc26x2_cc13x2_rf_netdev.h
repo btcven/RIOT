@@ -32,7 +32,6 @@ extern "C" {
  */
 typedef struct {
     netdev_ieee802154_t netdev; /**< netdev parent struct */
-    void* rf_handle; /** RF Handle */
 } cc26x2_cc13x2_rf_t;
 
 void cc26x2_cc13x2_rf_setup(cc26x2_cc13x2_rf_t* dev);
