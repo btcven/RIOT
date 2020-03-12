@@ -17,6 +17,9 @@
 #include "cc26x2_cc13x2_rf_netdev.h"
 #include "cc26x2_cc13x2_rf_internal.h"
 
+#define ENABLE_DEBUG (1)
+#include "debug.h"
+
 /* Reference pointer for the IRQ handler */
 static netdev_t *_dev;
 
@@ -179,6 +182,12 @@ static void _isr(netdev_t *netdev)
 static int _init(netdev_t *netdev)
 {
     (void)netdev;
+
+    if (cc26x2_cc13x2_rf_init() < 0) {
+        DEBUG_PUTS("[cc26x2_cc13x2]: Coudln't initialize RF driver");
+        return -1;
+    }
+
     return 0;
 }
 
@@ -195,6 +204,4 @@ void cc26x2_cc13x2_rf_setup(cc26x2_cc13x2_rf_t* dev)
 {
     netdev_t *netdev = (netdev_t *)dev;
     netdev->driver = &cc26x2_cc13x2_rf_driver;
-
-    cc26x2_cc13x2_rf_init();
 }

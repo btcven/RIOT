@@ -73,8 +73,11 @@ extern "C" {
 
 /**
  * @brief   Initialize RF driver
+ *
+ * @return  0 Succeed
+ * @return -1 RF initialization failed
  */
-void cc26x2_cc13x2_rf_init(void);
+int cc26x2_cc13x2_rf_init(void);
 
 #ifdef __cplusplus
 } /* end extern "C" */

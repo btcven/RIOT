@@ -55,7 +55,7 @@ static void _init_receive_parameters(rfc_CMD_PROP_RX_ADV_t *cmd_rx)
     cmd_rx->pOutput = (uint8_t *)&_radio.rx_stats;
 }
 
-void cc26x2_cc13x2_rf_init(void)
+int cc26x2_cc13x2_rf_init(void)
 {
     /* Initialize command parameters */
     _init_radio_parameters(&rf_cmd_prop_radio_div_setup);
@@ -73,4 +73,10 @@ void cc26x2_cc13x2_rf_init(void)
     _radio.handle = RF_open(&_rf_prop_obj, &rf_prop_mode,
                             (RF_RadioSetup *)&rf_cmd_prop_radio_div_setup,
                             &prop_params);
+
+    if (_radio.handle == NULL) {
+        return -1;
+    }
+
+    return 0;
 }
