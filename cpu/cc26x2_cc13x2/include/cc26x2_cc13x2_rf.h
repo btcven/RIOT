@@ -30,6 +30,13 @@
 extern "C" {
 #endif
 
+#ifndef CONFIG_CC26x2_CC13X2_RF_RX_BUF_NUMOF
+/**
+ * @brief   Number of receive buffers
+ */
+#define CONFIG_CC26x2_CC13X2_RF_RX_BUF_NUMOF (4)
+#endif
+
 /**
  * @brief   CMD_PROP_RADIO_DIV_SETUP
  *

@@ -24,8 +24,7 @@
 #define ENABLE_DEBUG (0)
 #include "debug.h"
 
-static void rfc_power_on(void);
-static uint32_t rfc_execute_sync(uint32_t cmd);
+static uint32_t _rfc_execute_sync(uint32_t cmd);
 
 static rfc_cmd_sync_start_rat_t _start_rat = {
     .command_no = RFC_CMD_SYNC_START_RAT,
@@ -73,8 +72,8 @@ static inline rfc_op_t *_last_in_chain(rfc_op_t *op)
     return curr_op;
 }
 
-void rfc_init(rfc_op_t *radio_setup, void (* cpe_patch_fn)(void),
-              void (* handler_cb)(void))
+void cc26x2_cc13x2_rfc_init(rfc_op_t *radio_setup, void (* cpe_patch_fn)(void),
+                            void (* handler_cb)(void))
 {
     assert(radio_setup != NULL);
 
@@ -91,29 +90,13 @@ void rfc_init(rfc_op_t *radio_setup, void (* cpe_patch_fn)(void),
     PRCM->RFCMODESEL = 0;
 }
 
-int rfc_enable(void)
+int cc26x2_cc13x2_rfc_power_on(void)
 {
+    unsigned key = irq_disable();
+
     /* Add radio setup to the last command as in the power-up sequence we'll
      * execute it */
     _last_command = _radio_setup;
-
-    /* Power on RF Core */
-    rfc_power_on();
-
-    return 0;
-}
-
-/**
- * @brief   Turns on the radio core.
- *
- *  - Switches the high frequency clock to the xosc crystal on
- *  CC26X2/CC13X2.
- *  - Powers on the radio core power domain
- *  - Enables the radio core power domain
- */
-static void rfc_power_on(void)
-{
-    unsigned key = irq_disable();
 
     /* Enable RF Core power domain */
     if (!power_is_domain_enabled(POWER_DOMAIN_RFC)) {
@@ -165,15 +148,18 @@ static void rfc_power_on(void)
     _start_rat.next_op = _radio_setup;
     _start_rat.rat0 = _rat_offset;
 
-    uint32_t cmdsta = rfc_execute_sync((uint32_t)&_start_rat);
+    uint32_t cmdsta = _rfc_execute_sync((uint32_t)&_start_rat);
     if (cmdsta != RFC_CMDSTA_DONE) {
-        DEBUG("rfc_power_on: radio setup failed! CMDSTA = %lx\n", cmdsta);
+        DEBUG("rfc: radio setup failed! CMDSTA = %lx\n", cmdsta);
+        return -1;
     }
 
     irq_restore(key);
+
+    return 0;
 }
 
-uint32_t rfc_send_command(rfc_op_t *op)
+uint32_t cc26x2_cc13x2_rfc_send_cmd(rfc_op_t *op)
 {
     assert(op);
 
@@ -187,16 +173,16 @@ uint32_t rfc_send_command(rfc_op_t *op)
 
     _last_command = op;
 
-    uint32_t cmdsta = rfc_execute_sync((uint32_t)_last_command);
+    uint32_t cmdsta = _rfc_execute_sync((uint32_t)_last_command);
 
     irq_restore(key);
 
     return cmdsta;
 }
 
-void rfc_abort_command(void)
+void cc26x2_cc13x2_rfc_abort_cmd(void)
 {
-    if ((rfc_execute_sync(RFC_CMDR_DIR_CMD(RFC_CMD_STOP)) & 0xFF) != RFC_CMDSTA_DONE) {
+    if ((_rfc_execute_sync(RFC_CMDR_DIR_CMD(RFC_CMD_STOP)) & 0xFF) != RFC_CMDSTA_DONE) {
         DEBUG_PUTS("rfc_abort_cmd: couldn't execute CMD_STOP");
     }
 }
@@ -206,7 +192,7 @@ void rfc_abort_command(void)
  *
  * @param[in] cmd The command.
  */
-static uint32_t rfc_execute_sync(uint32_t cmd)
+static uint32_t _rfc_execute_sync(uint32_t cmd)
 {
     /* Wait until the doorbell becomes available */
     while (RFC_DBELL->CMDR != 0) {}

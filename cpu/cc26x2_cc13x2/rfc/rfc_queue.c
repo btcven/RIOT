@@ -21,19 +21,7 @@
 #define ENABLE_DEBUG (0)
 #include "debug.h"
 
-void rfc_data_queue_init(rfc_data_queue_t *queue, uint8_t *curr_entry)
-{
-    DEBUG("rfc_data_queue_init(%08lx, %08lx)\n", (uint32_t)queue,
-          (uint32_t)curr_entry);
-
-    assert(queue && curr_entry);
-
-    /* Configure the data queue as a circular buffer */
-    queue->curr_entry = curr_entry;
-    queue->last_entry = NULL;
-}
-
-uint8_t *rfc_data_queue_available(rfc_data_queue_t *queue)
+uint8_t *cc26x2_cc13x2_rfc_queue_recv(rfc_data_queue_t *queue)
 {
     assert(queue);
 
@@ -49,35 +37,4 @@ uint8_t *rfc_data_queue_available(rfc_data_queue_t *queue)
     } while (curr_entry != start_entry);
 
     return NULL;
-}
-
-void rfc_data_entry_gen_init(uint8_t *buf, const size_t buf_len,
-                             const size_t lensz, uint8_t *next_entry)
-{
-    DEBUG("rfc_data_entry_init(%08lx, %d, %d, %08lx)\n", (uint32_t)buf, buf_len,
-          lensz, (uint32_t)next_entry);
-
-    assert(buf && lensz <= 2);
-    assert(buf_len > sizeof(rfc_data_entry_t) + lensz);
-
-    /* At the start of the buffer there's a `rfc_data_entry_t` structure,
-     * we directly cast the buffer to it */
-    rfc_data_entry_t *data_entry = (rfc_data_entry_t *)buf;
-
-    data_entry->status = RFC_DATA_ENTRY_PENDING;
-
-    /* Configure buffer as a general entry */
-    data_entry->config.type = RFC_DATA_ENTRY_TYPE_GEN;
-
-    /* Length of the length field in bytes, it's 2 byte maximum */
-    data_entry->config.lensz = lensz;
-
-    data_entry->length = buf_len - sizeof(rfc_data_entry_t);
-
-    data_entry->next_entry = next_entry;
-
-    DEBUG("rfc_data_entry_init: %08lx, %u, %u, %u %u\n",
-          (uint32_t)data_entry->next_entry, data_entry->status,
-          data_entry->config.type, data_entry->config.lensz,
-          data_entry->length);
 }

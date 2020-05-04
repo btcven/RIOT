@@ -33,14 +33,12 @@
 
 #define TX_BUF_SIZE (144)
 
-static uint8_t _tx_buf0[TX_BUF_SIZE] __attribute__ ((aligned(4)));
+static uint8_t _tx_buf[TX_BUF_SIZE];
 
-#define RX_BUF_SIZE (144)
+#define RX_BUF_NUMOF (CONFIG_CC26x2_CC13X2_RF_RX_BUF_NUMOF)
+#define RX_BUF_SIZE  (144)
 
-static uint8_t _rx_buf0[RX_BUF_SIZE] __attribute__ ((aligned(4)));
-static uint8_t _rx_buf1[RX_BUF_SIZE] __attribute__ ((aligned(4)));
-static uint8_t _rx_buf2[RX_BUF_SIZE] __attribute__ ((aligned(4)));
-static uint8_t _rx_buf3[RX_BUF_SIZE] __attribute__ ((aligned(4)));
+static uint8_t _rx_buf[RX_BUF_NUMOF][RX_BUF_SIZE];
 
 static rfc_data_queue_t _rx_queue; /**< RX queue */
 
@@ -101,7 +99,7 @@ static void _rx_start(void)
     rf_cmd_prop_rx_adv.queue = &_rx_queue;
 
     /* Start RX */
-    uint32_t cmdsta = rfc_send_command((rfc_op_t *)&rf_cmd_prop_rx_adv);
+    uint32_t cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_prop_rx_adv);
 
     if ((cmdsta & 0xff) != RFC_CMDSTA_DONE) {
         DEBUG_PUTS("_rx_start: RX failed");
@@ -134,12 +132,12 @@ static int _send(netdev_t *dev, const iolist_t *iolist)
 
     if (_is_in_rx()) {
         DEBUG_PUTS("_send: aborting");
-        rfc_abort_command();
+        cc26x2_cc13x2_rfc_abort_cmd();
     }
 
     size_t len = 0;
     /* Reserve the first bytes of the PHR */
-    uint8_t *bufpos = _tx_buf0 + 2;
+    uint8_t *bufpos = _tx_buf + 2;
 
     for (const iolist_t *iol = iolist; iol; iol = iol->iol_next) {
         len += iol->iol_len;
@@ -162,14 +160,14 @@ static int _send(netdev_t *dev, const iolist_t *iolist)
      * The Radio will flip the bits around, so _tx_buf[0] must have the
      * length LSBs (PHR[15:8] and _tx_buf[1] will have PHR[7:0]
      */
-    _tx_buf0[0] = ((total_length >> 0) & 0xFF);
-    _tx_buf0[1] = ((total_length >> 8) & 0xFF) + 0x08 + 0x10;
+    _tx_buf[0] = ((total_length >> 0) & 0xFF);
+    _tx_buf[1] = ((total_length >> 8) & 0xFF) + 0x08 + 0x10;
 
     rf_cmd_prop_tx_adv.status = RFC_PENDING;
-    rf_cmd_prop_tx_adv.pkt = _tx_buf0;
+    rf_cmd_prop_tx_adv.pkt = _tx_buf;
     rf_cmd_prop_tx_adv.pkt_len = len + 2;
 
-    uint32_t cmdsta = rfc_send_command((rfc_op_t *)&rf_cmd_prop_tx_adv);
+    uint32_t cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_prop_tx_adv);
 
     if ((cmdsta & 0xFF) != RFC_CMDSTA_DONE) {
         DEBUG_PUTS("_send: TX send failed!");
@@ -184,7 +182,7 @@ static int _recv(netdev_t *dev, void *buf, size_t len, void *info)
     (void)dev;
 
     rfc_data_entry_general_t *entry =
-        (rfc_data_entry_general_t *)rfc_data_queue_available(&_rx_queue);
+        (rfc_data_entry_general_t *)cc26x2_cc13x2_rfc_queue_recv(&_rx_queue);
 
     if (!entry) {
         DEBUG_PUTS("_recv: no entry available");
@@ -275,14 +273,28 @@ static int _init(netdev_t *dev)
      * Requires the first bit to 0 for unicast addresses */
     netdev->netdev.short_addr[1] &= 0x7F;
 
-    /* Initialize data entries */
-    rfc_data_entry_gen_init(_rx_buf0, sizeof(_rx_buf0), sizeof(uint16_t), _rx_buf1);
-    rfc_data_entry_gen_init(_rx_buf1, sizeof(_rx_buf1), sizeof(uint16_t), _rx_buf2);
-    rfc_data_entry_gen_init(_rx_buf2, sizeof(_rx_buf2), sizeof(uint16_t), _rx_buf3);
-    rfc_data_entry_gen_init(_rx_buf3, sizeof(_rx_buf3), sizeof(uint16_t), _rx_buf0);
+    /* Initialize data entries as general, with a length field of 2 bytes
+     * (uint16_t) and the correct RX buffer size */
+    for (unsigned i = 0; i < RX_BUF_NUMOF; i++) {
+        rfc_data_entry_t *entry = (rfc_data_entry_t *)_rx_buf[i];
+
+        entry->status = RFC_DATA_ENTRY_PENDING;
+        entry->config.type = RFC_DATA_ENTRY_TYPE_GEN;
+        entry->config.lensz = sizeof(uint16_t);
+        entry->length = RX_BUF_SIZE - sizeof(rfc_data_entry_t);
+
+        if (i + 1 == RX_BUF_NUMOF) {
+            /* Point to the first entry if this is the last */
+            entry->next_entry = _rx_buf[0];
+        }
+        else {
+            entry->next_entry = _rx_buf[i + 1];
+        }
+    }
 
     /* Initialize RX data queue */
-    rfc_data_queue_init(&_rx_queue, _rx_buf0);
+    _rx_queue.curr_entry = _rx_buf[0];
+    _rx_queue.last_entry = NULL;
 
     /* Tune the radio to the given frequency */
     rf_cmd_fs.frequency = 915;
@@ -296,11 +308,11 @@ static int _init(netdev_t *dev)
     /* Initialize radio driver in proprietary setup for the Sub-GHz band.
      * To use Sub-GHz we need to use CMD_PROP_RADIO_DIV_SETUP as our setup
      * command. */
-    rfc_init((rfc_op_t *)&rf_cmd_prop_radio_div_setup, rf_patch_cpe_prop,
-             _rfc_isr);
+    cc26x2_cc13x2_rfc_init((rfc_op_t *)&rf_cmd_prop_radio_div_setup,
+                           rf_patch_cpe_prop, _rfc_isr);
 
-    if (rfc_enable() < 0) {
-        DEBUG_PUTS("_init: rfc_enable failed!");
+    if (cc26x2_cc13x2_rfc_power_on() < 0) {
+        DEBUG_PUTS("_init: cc26x2_cc13x2_rfc_power_on failed!");
         return -1;
     }
 

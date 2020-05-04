@@ -37,50 +37,42 @@ extern "C" {
  * @param[in] cpe_patch_fn CPE patch function, can be NULL.
  * @param[in] handler_cb   IRQ handler.
  */
-void rfc_init(rfc_op_t *radio_setup, void (* cpe_patch_fn)(void),
-              void ( *handler_cb)(void));
+void cc26x2_cc13x2_rfc_init(rfc_op_t *radio_setup, void (* cpe_patch_fn)(void),
+                            void ( *handler_cb)(void));
 
 /**
- * @brief   Enable radio.
+ * @brief   Power on the radio.
+ *
+ *  - Switches the high frequency clock to the xosc crystal on
+ *  CC26X2/CC13X2.
+ *  - Powers on the radio core power domain
+ *  - Enables the radio core power domain
  *
  * @return 0 on success.
  * @return -1 on failure.
  */
-int rfc_enable(void);
+int cc26x2_cc13x2_rfc_power_on(void);
 
 /**
  * @brief   Send a command to the RF Core.
  *
- * @param[in] op         The command to send.
+ * @param[in] op The command to send.
  *
  * @return CMDSTA register value.
  */
-uint32_t rfc_send_command(rfc_op_t *op);
+uint32_t cc26x2_cc13x2_rfc_send_cmd(rfc_op_t *op);
 
 /**
  * @brief   Abort the running command.
  */
-void rfc_abort_command(void);
-
-/**
- * @brief   Initialize a data queue.
- *
- * Initializes a data queue as a circular buffer with the given buffer.
- *
- * @pre (@p queue != NULL) && (@p bufs != NULL)
- *
- * @param[in] queue      The queue.
- * @param[in] curr_entry First entry in the queue.
- */
-void rfc_data_queue_init(rfc_data_queue_t *queue, uint8_t *curr_entry);
+void cc26x2_cc13x2_rfc_abort_cmd(void);
 
 /**
  * @brief   Is data available on the data queue?
  *
  * Loops over the queue to check for finished entries.
  *
- * @note The data queue must be configured as a circular buffer with
- *       @ref rfc_data_queue_init.
+ * @note The data queue must be configured as a circular buffer (no last entry).
  *
  * @note After processing the data entry you must set the `status` field to
  *       @ref RFC_DATA_ENTRY_PENDING so the radio CPU can use it again.
@@ -92,22 +84,7 @@ void rfc_data_queue_init(rfc_data_queue_t *queue, uint8_t *curr_entry);
  * @return uint8_t * The finished data entry.
  * @return NULL      No data available.
  */
-uint8_t *rfc_data_queue_available(rfc_data_queue_t *queue);
-
-/**
- * @brief   Initialize data entry
- *
- * @pre @p buf != NULL
- * @pre @p lensz <= 2
- * @pre @p buf_len > sizeof(@ref rfc_data_entry_t) + @p lensz
- *
- * @param[in] buf        The data entry.
- * @param[in] buf_len    The buffer length (including data entry length).
- * @param[in] lensz      Size of the length field.
- * @param[in] next_entry Next datay entry.
- */
-void rfc_data_entry_gen_init(uint8_t *buf, const size_t buf_len,
-                             const size_t lensz, uint8_t *next_entry);
+uint8_t *cc26x2_cc13x2_rfc_queue_recv(rfc_data_queue_t *queue);
 
 #ifdef __cplusplus
 }
