@@ -28,6 +28,39 @@
 extern "C" {
 #endif
 
+#define RFC_MOD_TYPE_FSK           (0) /**< FSK modulation type */
+#define RFC_MOD_TYPE_GFSK          (1) /**< GFSK modulation type */
+#define RFC_MOD_TYPE_OOK           (2) /**< OOK modulation type */
+
+#define RFC_DEV_STEP_SZ_250_HZ     (0) /**< 250 Hz deviation step size */
+#define RFC_DEV_STEP_SZ_1000_HZ    (1) /**< 1000 Hz deviation step size */
+#define RFC_DEV_STEP_SZ_15_625_HZ  (2) /**< 15.625 Hz deviation step size */
+#define RFC_DEV_STEP_SZ_62_5_HZ    (3) /**< 62.5 Hz deviation step size */
+
+#define RFC_DECIM_MODE_AUTO        (0) /**< Automatic PDIF decimation */
+#define RFC_DECIM_MODE_FORCE_0     (1) /**< Force PDIF decimation to 0 */
+#define RFC_DECIM_MODE_FORCE_1     (2) /**< Force PDIF decimation to 1 */
+#define RFC_DECIM_MODE_FORCE_2     (5) /**< Force PDIF decimation to 2 */
+
+
+#define RFC_PREAM_MODE_0_FIRST     (0) /**< Send 0 as the first preamble bit */
+#define RFC_PREAM_MODE_1_FIRST     (1) /**< Send 1 as the first preamble bit */
+#define RFC_PREAM_MODE_SAME_BIT_SW (2) /**< Send same first bit in preamble and sync word */
+#define RFC_PREAM_MODE_DIFF_BIT_SW (3) /**< Send different first bit in preamble and sync word */
+
+#define RFC_WHITEN_MODE_NONE                 (0) /**< No whitening */
+#define RFC_WHITEN_MODE_CC1101               (1) /**< CC1101/CC2500 compatible whitening */
+#define RFC_WHITEN_MODE_PN9                  (2) /**< PN9 whitening without byte reversal */
+#define RFC_WHITEN_MODE_IEEE802154G_NONE     (4) /**< No whitener, 32-bit IEEE 802.15.4g compatible CRC */
+#define RFC_WHITEN_MODE_IEEE802154G_CRC32    (5) /**< IEEE 802.15.4g compatible whitener and 32-bit CRC */
+#define RFC_WHITEN_MODE_IEEE802154G_ONLY_CRC (6) /**< No whitener, dynamically IEEE 802.15.4g compatible
+                                                      16-bit or 32-bit */
+#define RFC_WHITEN_MODE_IEEE802154G_CRC      (7) /**< Dynamically IEEE 802.15.4g compatible whitener and
+                                                      16-bit or 32-bit CRC */
+
+#define RFC_BIAS_MODE_INTERNAL     (0) /**< Internal bias */
+#define RFC_BIAS_MODE_EXTERNAL     (1) /**< External bias */
+
 /**
  * @brief   CMD_PROP_RADIO_DIV_SETUP
  * @{
@@ -206,7 +239,7 @@ typedef struct {
      * Supported values: 0, 2, 4, 5, 6, 10, 12, 15, and 30
      */
     uint8_t lo_divider;
-} __attribute__ ((aligned (4))) rfc_cmd_prop_radio_div_setup_t;
+} rfc_cmd_prop_radio_div_setup_t;
 /** @} */
 
 /**
@@ -301,7 +334,7 @@ typedef struct {
     void *next_op; /**< Pointer to the next operation to run */
     rfc_ratmr_t start_time; /**< Absolute or relative start time */
     rfc_trigger_t start_trigger; /**< Identification of the trigger that
-                                   starts the operation */
+                                         starts the operation */
     rfc_cond_t condition; /**< Condition for running next command */
     struct {
         /**
@@ -392,7 +425,7 @@ typedef struct {
         uint16_t num_hdr_bits:6; /**< Number of bits in header (0--32) */
         uint16_t len_pos:5; /**< Position of length field in header (0--31) */
         uint16_t num_len_bits:5; /**< Number of bits in length field (0--16) */
-    } hdr_conf;
+    } hdr_conf; /**< Packet header configuration */
     struct {
         /**
          * 0: Address after header
@@ -411,7 +444,7 @@ typedef struct {
          */
         uint16_t addr_pos:5;
         uint16_t num_addr:5; /**< Number of addresses in address list */
-    } addr_conf;
+    } addr_conf; /**< Addresses configuration */
     int8_t len_offset; /**< Signed value to add to length field */
     rfc_trigger_t end_trigger; /**< Trigger for ending the operation */
     /**
@@ -421,7 +454,7 @@ typedef struct {
     uint8_t *addr; /**< Pointer to address list */
     rfc_data_queue_t *queue; /**< Pointer to receive queue */
     uint8_t *output; /**< Pointer to output structure */
-} __attribute__ ((aligned (4))) rfc_cmd_prop_rx_adv_t;
+} rfc_cmd_prop_rx_adv_t;
 /** @} */
 
 #ifdef __cplusplus
