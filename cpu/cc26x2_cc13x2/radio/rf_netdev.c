@@ -31,12 +31,12 @@
 
 #include "cpu.h"
 
-#define TX_BUF_SIZE (144)
+#define TX_BUF_SIZE  (IEEE802154_PHY_MR_FSK_PHR_LEN + IEEE802154G_FRAME_LEN_MAX)
 
 static uint8_t _tx_buf[TX_BUF_SIZE];
 
 #define RX_BUF_NUMOF (CONFIG_CC26x2_CC13X2_RF_RX_BUF_NUMOF)
-#define RX_BUF_SIZE  (144)
+#define RX_BUF_SIZE  (IEEE802154G_FRAME_LEN_MAX + sizeof(rfc_data_entry_t))
 
 static uint8_t _rx_buf[RX_BUF_NUMOF][RX_BUF_SIZE];
 
@@ -137,11 +137,11 @@ static int _send(netdev_t *dev, const iolist_t *iolist)
 
     size_t len = 0;
     /* Reserve the first bytes of the PHR */
-    uint8_t *bufpos = _tx_buf + 2;
+    uint8_t *bufpos = _tx_buf + IEEE802154_PHY_MR_FSK_PHR_LEN;
 
     for (const iolist_t *iol = iolist; iol; iol = iol->iol_next) {
         len += iol->iol_len;
-        if (len > (TX_BUF_SIZE - 2)) {
+        if (len > (TX_BUF_SIZE - IEEE802154_PHY_MR_FSK_PHR_LEN)) {
             DEBUG_PUTS("_send: payload is too big!");
             return -EOVERFLOW;
         }
@@ -165,7 +165,7 @@ static int _send(netdev_t *dev, const iolist_t *iolist)
 
     rf_cmd_prop_tx_adv.status = RFC_PENDING;
     rf_cmd_prop_tx_adv.pkt = _tx_buf;
-    rf_cmd_prop_tx_adv.pkt_len = len + 2;
+    rf_cmd_prop_tx_adv.pkt_len = IEEE802154_PHY_MR_FSK_PHR_LEN + len;
 
     uint32_t cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_prop_tx_adv);
 
