@@ -318,11 +318,11 @@ static int _set(netdev_t *netdev, netopt_t opt, const void *val, size_t len)
 
     switch (opt) {
         case NETOPT_RX_END_IRQ:
-            if (len != sizeof(bool)) {
+            if (len != sizeof(netopt_enable_t)) {
                 return -EINVAL;
             }
             else {
-                if (*(const bool *)val) {
+                if (*(const netopt_enable_t *)val == NETOPT_ENABLE) {
                     RFC_DBELL_NONBUF->RFCPEIEN |= CPE_IRQ_RX_ENTRY_DONE;
                 }
                 else {
@@ -332,11 +332,16 @@ static int _set(netdev_t *netdev, netopt_t opt, const void *val, size_t len)
             return sizeof(netopt_enable_t);
 
         case NETOPT_TX_END_IRQ:
-            if (len != sizeof(bool)) {
+            if (len != sizeof(netopt_enable_t)) {
                 return -EINVAL;
             }
             else {
-                _tx_end_irq = *(const bool *)val;
+                if (*(const netopt_enable_t *)val == NETOPT_ENABLE) {
+                    _tx_end_irq = true;
+                }
+                else {
+                    _tx_end_irq = false;
+                }
             }
             return sizeof(netopt_enable_t);
 
