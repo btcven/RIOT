@@ -125,15 +125,13 @@ static int _send(netdev_t *dev, const iolist_t *iolist)
     (void)dev;
     DEBUG_PUTS("_send");
 
-    if (_is_in_tx()) {
-        DEBUG_PUTS("_send: already in TX");
-        return -EAGAIN;
-    }
-
     if (_is_in_rx()) {
         DEBUG_PUTS("_send: aborting");
         cc26x2_cc13x2_rfc_abort_cmd();
     }
+
+    /* Wait for previous TX (if any) to finish */
+    while (_is_in_tx()) {}
 
     size_t len = 0;
     /* Reserve the first bytes of the PHR */
