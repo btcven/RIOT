@@ -69,30 +69,30 @@ rfc_cmd_prop_radio_div_setup_t rf_cmd_prop_radio_div_setup =
         }
     },
     .modulation = {
-        .mod_type = 0x1,
-        .deviation = 0xC8,
-        .deviation_step_sz = 0
+        .mod_type = RFC_MOD_TYPE_GFSK,
+        .deviation = 200,
+        .deviation_step_sz = RFC_DEV_STEP_SZ_250_HZ
     },
     .symbol_rate = {
-        .prescale = 0xF,
+        .prescale = 15,
         .rate_word = 0x20000,
-        .decim_mode = 0x0
+        .decim_mode = RFC_DECIM_MODE_AUTO
     },
     .rx_bw = 0x59,
     .pream_conf = {
         .pream_bytes = 7,
-        .pream_mode = 0,
+        .pream_mode = RFC_PREAM_MODE_0_FIRST,
     },
     .format_conf = {
-        .sw_bits = 18,
+        .sw_bits = IEEE802154_PHY_MR_FSK_2FSK_SFD_LEN * 8,
         .bit_reversal = 0,
         .msb_first = 1,
         .fec_mode = 0,
-        .whiten_mode = 7
+        .whiten_mode = RFC_WHITEN_MODE_IEEE802154G_CRC
     },
     .config = {
         .front_end_mode = 0,
-        .bias_mode = 1,
+        .bias_mode = RFC_BIAS_MODE_EXTERNAL,
         .analog_cfg_mode = 0,
         .no_fs_powerup = 0
     },
@@ -171,7 +171,7 @@ rfc_cmd_prop_tx_adv_t rf_cmd_prop_tx_adv =
         .past_trig = 0
     },
     .pre_time = 0,
-    .sync_word = 0x0055904E,
+    .sync_word = IEEE802154_PHY_MR_FSK_2FSK_UNCODED_SFD_0,
     .pkt = 0 /* set by us */
 };
 
@@ -212,7 +212,7 @@ rfc_cmd_prop_rx_adv_t rf_cmd_prop_rx_adv =
         .append_timestamp = 0,
         .append_status = 1
     },
-    .sync_word0 = 0x0055904E,
+    .sync_word0 = IEEE802154_PHY_MR_FSK_2FSK_UNCODED_SFD_0,
     .sync_word1 = 0,
     .max_pkt_len = IEEE802154G_FRAME_LEN_MAX,
     .hdr_conf = {

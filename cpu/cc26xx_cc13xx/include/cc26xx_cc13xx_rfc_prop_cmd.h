@@ -28,6 +28,39 @@
 extern "C" {
 #endif
 
+#define RFC_MOD_TYPE_FSK           (0) /**< FSK modulation type */
+#define RFC_MOD_TYPE_GFSK          (1) /**< GFSK modulation type */
+#define RFC_MOD_TYPE_OOK           (2) /**< OOK modulation type */
+
+#define RFC_DEV_STEP_SZ_250_HZ     (0) /**< 250 Hz deviation step size */
+#define RFC_DEV_STEP_SZ_1000_HZ    (1) /**< 1000 Hz deviation step size */
+#define RFC_DEV_STEP_SZ_15_625_HZ  (2) /**< 15.625 Hz deviation step size */
+#define RFC_DEV_STEP_SZ_62_5_HZ    (3) /**< 62.5 Hz deviation step size */
+
+#define RFC_DECIM_MODE_AUTO        (0) /**< Automatic PDIF decimation */
+#define RFC_DECIM_MODE_FORCE_0     (1) /**< Force PDIF decimation to 0 */
+#define RFC_DECIM_MODE_FORCE_1     (2) /**< Force PDIF decimation to 1 */
+#define RFC_DECIM_MODE_FORCE_2     (5) /**< Force PDIF decimation to 2 */
+
+
+#define RFC_PREAM_MODE_0_FIRST     (0) /**< Send 0 as the first preamble bit */
+#define RFC_PREAM_MODE_1_FIRST     (1) /**< Send 1 as the first preamble bit */
+#define RFC_PREAM_MODE_SAME_BIT_SW (2) /**< Send same first bit in preamble and sync word */
+#define RFC_PREAM_MODE_DIFF_BIT_SW (3) /**< Send different first bit in preamble and sync word */
+
+#define RFC_WHITEN_MODE_NONE                 (0) /**< No whitening */
+#define RFC_WHITEN_MODE_CC1101               (1) /**< CC1101/CC2500 compatible whitening */
+#define RFC_WHITEN_MODE_PN9                  (2) /**< PN9 whitening without byte reversal */
+#define RFC_WHITEN_MODE_IEEE802154G_NONE     (4) /**< No whitener, 32-bit IEEE 802.15.4g compatible CRC */
+#define RFC_WHITEN_MODE_IEEE802154G_CRC32    (5) /**< IEEE 802.15.4g compatible whitener and 32-bit CRC */
+#define RFC_WHITEN_MODE_IEEE802154G_ONLY_CRC (6) /**< No whitener, dynamically IEEE 802.15.4g compatible
+                                                      16-bit or 32-bit */
+#define RFC_WHITEN_MODE_IEEE802154G_CRC      (7) /**< Dynamically IEEE 802.15.4g compatible whitener and
+                                                      16-bit or 32-bit CRC */
+
+#define RFC_BIAS_MODE_INTERNAL     (0) /**< Internal bias */
+#define RFC_BIAS_MODE_EXTERNAL     (1) /**< External bias */
+
 /**
  * @brief   CMD_PROP_RADIO_DIV_SETUP
  * @{
