@@ -382,6 +382,16 @@ static int _get(netdev_t *netdev, netopt_t opt, void *val, size_t max_len)
     }
 
     switch (opt) {
+        case NETOPT_IEEE802154_PHY:
+            if (max_len < sizeof(uint8_t)) {
+                return -EOVERFLOW;
+            }
+            else {
+                /* Only MR-FSK is supported */
+                *(uint8_t *)val = IEEE802154_PHY_MR_FSK;
+            }
+            return sizeof(uint8_t);
+
         case NETOPT_RX_END_IRQ:
             if (max_len < sizeof(netopt_enable_t)) {
                 return -EOVERFLOW;
