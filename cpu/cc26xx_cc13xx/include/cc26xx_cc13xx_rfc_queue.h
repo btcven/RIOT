@@ -40,11 +40,11 @@ typedef struct {
  * @brief   Data entry status
  */
 typedef enum {
-    RFC_DATA_ENTRY_PENDING = 0, /**< Entry not yet used */
-    RFC_DATA_ENTRY_ACTIVE = 1, /**< Entry in use by radio CPU */
-    RFC_DATA_ENTRY_BUSY = 2, /**< Entry being updated */
-    RFC_DATA_ENTRY_FINISHED = 3, /**< Radio CPU is finished accessing the
-                                      entry */
+    RFC_DATA_ENTRY_PENDING = 0,   /**< Entry not yet used */
+    RFC_DATA_ENTRY_ACTIVE = 1,    /**< Entry in use by radio CPU */
+    RFC_DATA_ENTRY_BUSY = 2,      /**< Entry being updated */
+    RFC_DATA_ENTRY_FINISHED = 3,  /**< Radio CPU is finished accessing the
+                                       entry */
     RFC_DATA_ENTRY_UNFINISHED = 4 /**< Radio CPU is finished accessing the
                                        entry, but packet could not be
                                        finished */
@@ -54,10 +54,10 @@ typedef enum {
  * @brief   Data entry type
  */
 typedef enum {
-    RFC_DATA_ENTRY_TYPE_GEN  = 0, /**< General type: Tx entry or single element
-                                       Rx entry */
-    RFC_DATA_ENTRY_TYPE_MULTI = 1, /**< Multi-element Rx entry type */
-    RFC_DATA_ENTRY_TYPE_PTR = 2, /**< Pointer entry type */
+    RFC_DATA_ENTRY_TYPE_GEN  = 0,   /**< General type: Tx entry or single
+                                         element Rx entry */
+    RFC_DATA_ENTRY_TYPE_MULTI = 1,  /**< Multi-element Rx entry type */
+    RFC_DATA_ENTRY_TYPE_PTR = 2,    /**< Pointer entry type */
     RFC_DATA_ENTRY_TYPE_PARTIAL = 3 /**< Partial read entry type */
 } rfc_data_entry_type_t;
 
