@@ -52,16 +52,18 @@ static uint32_t rf_prop_overrides[] =
 
 rfc_cmd_prop_radio_div_setup_t rf_cmd_prop_radio_div_setup =
 {
-    .op.command_no = 0x3807,
-    .op.status = 0x0000,
-    .op.next_op = NULL, /* set by us */
-    .op.start_time = 0x00000000,
-    .op.start_trigger.type = RFC_TRIG_NOW,
-    .op.start_trigger.ena_cmd = 0x0,
-    .op.start_trigger.trigger_no = 0x0,
-    .op.start_trigger.past_trig = 0x0,
-    .op.condition.rule = 0x1,
-    .op.condition.skip_no = 0x0,
+    .op = {
+        .command_no = RFC_CMD_PROP_RADIO_DIV_SETUP,
+        .status = RFC_IDLE,
+        .next_op = NULL, /* set by us */
+        .start_time = 0,
+        .start_trigger.type = RFC_TRIG_NOW,
+        .start_trigger.ena_cmd = 0,
+        .start_trigger.trigger_no = 0,
+        .start_trigger.past_trig = 0,
+        .condition.rule = RFC_COND_ALWAYS,
+        .condition.skip_no = 0,
+    },
     .modulation.mod_type = 0x1,
     .modulation.deviation = 0xC8,
     .modulation.deviation_step_sz = 0x0,
@@ -89,16 +91,18 @@ rfc_cmd_prop_radio_div_setup_t rf_cmd_prop_radio_div_setup =
 
 rfc_cmd_fs_t rf_cmd_fs =
 {
-    .op.command_no = RFC_CMD_FS,
-    .op.status = RFC_IDLE,
-    .op.next_op = NULL, /* set by us */
-    .op.start_time = 0,
-    .op.start_trigger.type = RFC_TRIG_NOW,
-    .op.start_trigger.ena_cmd = 0,
-    .op.start_trigger.trigger_no = 0,
-    .op.start_trigger.past_trig = 0,
-    .op.condition.rule = RFC_COND_NEVER,
-    .op.condition.skip_no = 0,
+    .op = {
+        .command_no = RFC_CMD_FS,
+        .status = RFC_IDLE,
+        .next_op = NULL, /* set by us */
+        .start_time = 0,
+        .start_trigger.type = RFC_TRIG_NOW,
+        .start_trigger.ena_cmd = 0,
+        .start_trigger.trigger_no = 0,
+        .start_trigger.past_trig = 0,
+        .condition.rule = RFC_COND_ALWAYS,
+        .condition.skip_no = 0,
+    },
     .frequency = 0x0393, /* set by us */
     .fract_freq = 0, /* set by us */
     .synth_conf.txmode = 0,
@@ -111,16 +115,18 @@ rfc_cmd_fs_t rf_cmd_fs =
 
 rfc_cmd_prop_tx_adv_t rf_cmd_prop_tx_adv =
 {
-    .op.command_no = 0x3803,
-    .op.status = 0x0000,
-    .op.next_op = NULL, /* set by us */
-    .op.start_time = 0x00000000,
-    .op.start_trigger.type = RFC_TRIG_NOW,
-    .op.start_trigger.ena_cmd = 0x0,
-    .op.start_trigger.trigger_no = 0x0,
-    .op.start_trigger.past_trig = 0x0,
-    .op.condition.rule = 0x1,
-    .op.condition.skip_no = 0x0,
+    .op = {
+        .command_no = RFC_CMD_PROP_TX_ADV,
+        .status = RFC_IDLE,
+        .next_op = NULL, /* set by us */
+        .start_time = 0,
+        .start_trigger.type = RFC_TRIG_NOW,
+        .start_trigger.ena_cmd = 0,
+        .start_trigger.trigger_no = 0,
+        .start_trigger.past_trig = 0,
+        .condition.rule = RFC_COND_ALWAYS,
+        .condition.skip_no = 0x0,
+    },
     .pkt_conf.fs_off = 0x0,
     .pkt_conf.use_crc = 0x1,
     .pkt_conf.crc_inc_sw = 0x0,
@@ -141,16 +147,18 @@ rfc_cmd_prop_tx_adv_t rf_cmd_prop_tx_adv =
 
 rfc_cmd_prop_rx_adv_t rf_cmd_prop_rx_adv =
 {
-    .op.command_no = 0x3804,
-    .op.status = 0x0000,
-    .op.next_op = NULL, /* set by us */
-    .op.start_time = 0x00000000,
-    .op.start_trigger.type = RFC_TRIG_NOW,
-    .op.start_trigger.ena_cmd = 0x0,
-    .op.start_trigger.trigger_no = 0x0,
-    .op.start_trigger.past_trig = 0x0,
-    .op.condition.rule = 0x1,
-    .op.condition.skip_no = 0x0,
+    .op = {
+        .command_no = RFC_CMD_PROP_RX_ADV,
+        .status = RFC_IDLE,
+        .next_op = NULL, /* set by us */
+        .start_time = 0,
+        .start_trigger.type = RFC_TRIG_NOW,
+        .start_trigger.ena_cmd = 0,
+        .start_trigger.trigger_no = 0,
+        .start_trigger.past_trig = 0,
+        .condition.rule = RFC_COND_ALWAYS,
+        .condition.skip_no = 0,
+    },
     .pkt_conf.fs_off = 0x0,
     .pkt_conf.repeat_ok = 0x1,
     .pkt_conf.repeat_nok = 0x1,
