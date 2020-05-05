@@ -34,7 +34,7 @@ typedef struct {
     uint8_t *curr_entry; /**< Pointer to the data entry to be used */
     uint8_t *last_entry; /**< Last entry of the queue, NULL is queue is
                               circular */
-} __attribute__ ((aligned (4))) rfc_data_queue_t;
+} rfc_data_queue_t;
 
 /**
  * @brief   Data entry status
@@ -81,7 +81,7 @@ typedef struct {
    uint16_t length; /**< For pointer entries: Number of bytes in the data buffer
                          pointed to. For other entries: Number of bytes
                          following this length field */
-} __attribute__ ((aligned (4))) rfc_data_entry_t;
+} rfc_data_entry_t;
 
 /**
  * @brief   Data entry general
@@ -96,7 +96,7 @@ typedef struct {
                          following this length field */
    uint8_t data; /**< First byte of the data array to be received or
                       transmitted */
-} __attribute__ ((aligned (4))) rfc_data_entry_general_t;
+} rfc_data_entry_general_t;
 
 #ifdef __cplusplus
 } /* end of extern "C" */

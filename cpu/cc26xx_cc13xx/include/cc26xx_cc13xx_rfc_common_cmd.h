@@ -67,7 +67,7 @@ typedef struct {
     rfc_trigger_t start_trigger; /**< Identification of the trigger that
                                          starts the operation */
     rfc_cond_t condition; /**< Condition for running next command */
-} __attribute__ ((aligned (4))) rfc_op_t;
+} rfc_op_t;
 
 /**
  * @brief   CMD_FS
@@ -97,7 +97,7 @@ typedef struct {
     uint8_t __dummy1; /**< Reserved */
     uint8_t __dummy2; /**< Reserved */
     uint16_t __dummy3; /**< Reserved */
-} __attribute__ ((aligned (4))) rfc_cmd_fs_t;
+} rfc_cmd_fs_t;
 /** @} */
 
 /**
@@ -116,7 +116,7 @@ typedef struct {
     rfc_trigger_t start_trigger; /**< Identification of the trigger that
                                             starts the operation */
     rfc_cond_t condition; /**< Condition for running next command */
-} __attribute__ ((aligned (4))) rfc_cmd_fs_powerdown_t;
+} rfc_cmd_fs_powerdown_t;
 /** @} */
 
 /**
@@ -138,7 +138,7 @@ typedef struct {
     uint16_t __dummy0; /**< Reserved */
     rfc_ratmr_t rat0; /**< The returned RAT timer value corresponding to the
                            value the RAT would have had when the RTC was zero */
-} __attribute__ ((aligned (4))) rfc_cmd_sync_stop_rat_t;
+} rfc_cmd_sync_stop_rat_t;
 /** @} */
 
 /**
@@ -159,7 +159,7 @@ typedef struct {
     rfc_ratmr_t rat0; /**< The desired RAT timer value corresponding to the
                            value the RAT would have had when the RTC was zero.
                            This parameter is returned by CMD_SYNC_STOP_RAT */
-} __attribute__ ((aligned (4))) rfc_cmd_sync_start_rat_t;
+} rfc_cmd_sync_start_rat_t;
 /** @} */
 
 #ifdef __cplusplus

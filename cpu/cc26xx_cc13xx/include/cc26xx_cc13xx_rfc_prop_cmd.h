@@ -206,7 +206,7 @@ typedef struct {
      * Supported values: 0, 2, 4, 5, 6, 10, 12, 15, and 30
      */
     uint8_t lo_divider;
-} __attribute__ ((aligned (4))) rfc_cmd_prop_radio_div_setup_t;
+} rfc_cmd_prop_radio_div_setup_t;
 /** @} */
 
 /**
@@ -421,7 +421,7 @@ typedef struct {
     uint8_t *addr; /**< Pointer to address list */
     rfc_data_queue_t *queue; /**< Pointer to receive queue */
     uint8_t *output; /**< Pointer to output structure */
-} __attribute__ ((aligned (4))) rfc_cmd_prop_rx_adv_t;
+} rfc_cmd_prop_rx_adv_t;
 /** @} */
 
 #ifdef __cplusplus
