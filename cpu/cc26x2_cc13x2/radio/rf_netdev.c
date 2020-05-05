@@ -66,23 +66,23 @@ static void _rfc_isr(void)
     if (RFC_DBELL->RFCPEIFG & CPE_IRQ_LAST_COMMAND_DONE) {
         RFC_DBELL_NONBUF->RFCPEIFG = ~CPE_IRQ_LAST_COMMAND_DONE;
 
-        if (rf_cmd_prop_rx_adv.status == RFC_PROP_DONE_STOPPED ||
-            rf_cmd_prop_rx_adv.status == RFC_PROP_DONE_ABORT) {
+        if (rf_cmd_prop_rx_adv.op.status == RFC_PROP_DONE_STOPPED ||
+            rf_cmd_prop_rx_adv.op.status == RFC_PROP_DONE_ABORT) {
             DEBUG_PUTS("_rfc_isr: RX abort");
-            rf_cmd_prop_rx_adv.status = 0;
+            rf_cmd_prop_rx_adv.op.status = 0;
             /* Do nothing */
         }
-        else if (rf_cmd_prop_radio_div_setup.status == RFC_PROP_DONE_OK &&
-                 rf_cmd_fs.status == RFC_DONE_OK) {
+        else if (rf_cmd_prop_radio_div_setup.op.status == RFC_PROP_DONE_OK &&
+                 rf_cmd_fs.op.status == RFC_DONE_OK) {
             DEBUG_PUTS("_rfc_isr: init done");
 
-            rf_cmd_prop_radio_div_setup.status = 0;
-            rf_cmd_fs.status = 0;
+            rf_cmd_prop_radio_div_setup.op.status = 0;
+            rf_cmd_fs.op.status = 0;
             _rx_start();
         }
-        else if (rf_cmd_prop_tx_adv.status == RFC_PROP_DONE_OK) {
+        else if (rf_cmd_prop_tx_adv.op.status == RFC_PROP_DONE_OK) {
             DEBUG_PUTS("_rfc_isr: TX done");
-            rf_cmd_prop_tx_adv.status = RFC_IDLE;
+            rf_cmd_prop_tx_adv.op.status = 0;
             _rx_start();
             if (_tx_end_irq) {
                 _netdev->tx_complete = true;
@@ -95,7 +95,7 @@ static void _rfc_isr(void)
 static void _rx_start(void)
 {
     DEBUG_PUTS("_rx_start()");
-    rf_cmd_prop_rx_adv.status = RFC_PENDING;
+    rf_cmd_prop_rx_adv.op.status = RFC_PENDING;
     rf_cmd_prop_rx_adv.queue = &_rx_queue;
 
     /* Start RX */
@@ -108,14 +108,14 @@ static void _rx_start(void)
 
 static bool _is_in_rx(void)
 {
-    uint8_t status = rf_cmd_prop_rx_adv.status;
+    uint8_t status = rf_cmd_prop_rx_adv.op.status;
 
     return (status == RFC_ACTIVE) || (status == RFC_PENDING);
 }
 
 static bool _is_in_tx(void)
 {
-    uint8_t status = rf_cmd_prop_tx_adv.status;
+    uint8_t status = rf_cmd_prop_tx_adv.op.status;
 
     return (status == RFC_ACTIVE) || (status == RFC_PENDING);
 }
@@ -163,7 +163,7 @@ static int _send(netdev_t *dev, const iolist_t *iolist)
     _tx_buf[0] = ((total_length >> 0) & 0xFF);
     _tx_buf[1] = ((total_length >> 8) & 0xFF) + 0x08 + 0x10;
 
-    rf_cmd_prop_tx_adv.status = RFC_PENDING;
+    rf_cmd_prop_tx_adv.op.status = RFC_PENDING;
     rf_cmd_prop_tx_adv.pkt = _tx_buf;
     rf_cmd_prop_tx_adv.pkt_len = IEEE802154_PHY_MR_FSK_PHR_LEN + len;
 
@@ -301,9 +301,9 @@ static int _init(netdev_t *dev)
     rf_cmd_fs.fract_freq = 0;
 
     /* Chain the CMD_FS command after running setup */
-    rf_cmd_prop_radio_div_setup.condition.rule = RFC_COND_ALWAYS;
-    rf_cmd_prop_radio_div_setup.condition.skip_no = 0;
-    rf_cmd_prop_radio_div_setup.next_op = (rfc_op_t *)&rf_cmd_fs;
+    rf_cmd_prop_radio_div_setup.op.condition.rule = RFC_COND_ALWAYS;
+    rf_cmd_prop_radio_div_setup.op.condition.skip_no = 0;
+    rf_cmd_prop_radio_div_setup.op.next_op = (rfc_op_t *)&rf_cmd_fs;
 
     /* Initialize radio driver in proprietary setup for the Sub-GHz band.
      * To use Sub-GHz we need to use CMD_PROP_RADIO_DIV_SETUP as our setup

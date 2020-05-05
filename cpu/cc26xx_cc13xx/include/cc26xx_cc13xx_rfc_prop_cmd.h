@@ -73,13 +73,7 @@ typedef struct {
  * @brief   Proprietary Mode Radio Setup Command for All Frequency Bands
  */
 typedef struct {
-    uint16_t command_no; /**< The command ID number */
-    uint16_t status; /**< An integer telling the status of the command. */
-    void *next_op; /**< Pointer to the next operation to run */
-    rfc_ratmr_t start_time; /**< Absolute or relative start time */
-    rfc_trigger_t start_trigger; /**< Identification of the trigger that
-                                         starts the operation */
-    rfc_cond_t condition; /**< Condition for running next command */
+    rfc_op_t op; /**< Operation information */
     rfc_modulation_t modulation; /**< Modulation parameters */
     struct {
         uint32_t prescale:8; /**< Prescaler value */
@@ -218,13 +212,7 @@ typedef struct {
  * @brief   Proprietary Mode Advanced Transmit Command
  */
 typedef struct {
-    uint16_t command_no; /**< The command ID number */
-    uint16_t status; /**< An integer telling the status of the command. */
-    void *next_op; /**< Pointer to the next operation to run */
-    rfc_ratmr_t start_time; /**< Absolute or relative start time */
-    rfc_trigger_t start_trigger; /**< Identification of the trigger that
-                                         starts the operation */
-    rfc_cond_t condition; /**< Condition for running next command */
+    rfc_op_t op; /**< Operation information */
     struct {
         /**
          * 0h = Keep frequency synth on after command
@@ -296,13 +284,7 @@ typedef struct {
  * @brief   Proprietary Mode Advanced Receive Command
  */
 typedef struct {
-    uint16_t command_no; /**< The command ID number */
-    uint16_t status; /**< An integer telling the status of the command. */
-    void *next_op; /**< Pointer to the next operation to run */
-    rfc_ratmr_t start_time; /**< Absolute or relative start time */
-    rfc_trigger_t start_trigger; /**< Identification of the trigger that
-                                   starts the operation */
-    rfc_cond_t condition; /**< Condition for running next command */
+    rfc_op_t op; /**< Operation information */
     struct {
         /**
          * 0h = Keep frequency synth on after command

@@ -27,16 +27,16 @@
 static uint32_t _rfc_execute_sync(uint32_t cmd);
 
 static rfc_cmd_sync_start_rat_t _start_rat = {
-    .command_no = RFC_CMD_SYNC_START_RAT,
-    .status = RFC_IDLE, /* set by RF Core */
-    .next_op = NULL, /* set by us */
-    .start_time = 0,
-    .start_trigger.type = RFC_TRIG_NOW,
-    .start_trigger.ena_cmd = 0,
-    .start_trigger.trigger_no = 0,
-    .start_trigger.past_trig =0,
-    .condition.rule = RFC_COND_STOP_ON_FALSE,
-    .condition.skip_no = 0,
+    .op.command_no = RFC_CMD_SYNC_START_RAT,
+    .op.status = RFC_IDLE, /* set by RF Core */
+    .op.next_op = NULL, /* set by us */
+    .op.start_time = 0,
+    .op.start_trigger.type = RFC_TRIG_NOW,
+    .op.start_trigger.ena_cmd = 0,
+    .op.start_trigger.trigger_no = 0,
+    .op.start_trigger.past_trig =0,
+    .op.condition.rule = RFC_COND_STOP_ON_FALSE,
+    .op.condition.skip_no = 0,
     .__dummy0 = 0,
     .rat0 = 0, /* set by us */
 };
@@ -145,7 +145,7 @@ int cc26x2_cc13x2_rfc_power_on(void)
     RFC_DBELL_NONBUF->RFCPEIEN |= CPE_IRQ_LAST_COMMAND_DONE;
 
     /* Run radio setup command after we start the RAT */
-    _start_rat.next_op = _radio_setup;
+    _start_rat.op.next_op = _radio_setup;
     _start_rat.rat0 = _rat_offset;
 
     uint32_t cmdsta = _rfc_execute_sync((uint32_t)&_start_rat);
