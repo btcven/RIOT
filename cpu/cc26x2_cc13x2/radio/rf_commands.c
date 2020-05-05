@@ -20,6 +20,8 @@
 #include "cc26x2_cc13x2_rf.h"
 #include "cc26xx_cc13xx_rfc_mailbox.h"
 
+#define RX_BANDWIDTH_310KHZ (0x59) /**< RX bandwidth */
+
 /* Overrides for CMD_PROP_RADIO_DIV_SETUP */
 static uint32_t rf_prop_overrides[] =
 {
@@ -78,7 +80,7 @@ rfc_cmd_prop_radio_div_setup_t rf_cmd_prop_radio_div_setup =
         .rate_word = 0x20000,
         .decim_mode = RFC_DECIM_MODE_AUTO
     },
-    .rx_bw = 0x59,
+    .rx_bw = RX_BANDWIDTH_310KHZ,
     .pream_conf = {
         .pream_bytes = 7,
         .pream_mode = RFC_PREAM_MODE_0_FIRST,
