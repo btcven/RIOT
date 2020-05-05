@@ -98,6 +98,19 @@ extern "C" {
 #define IEEE802154G_FRAME_LEN_MAX      (2047U)  /**< maximum 802.15.4g-2012 frame length */
 
 #define IEEE802154_PHY_MR_FSK_PHR_LEN      (2)  /**< MR-FSK PHY header length */
+#define IEEE802154_PHY_MR_FSK_2FSK_SFD_LEN (2)  /**< MR-FSK SFD length on Filtered 2-FSK */
+
+/**
+ * For the MR-FSK PHY, the SFD value when PHR + PSDU are uncoded
+ * and with phyMRFSKSFD = 0 or 1 respectively
+ *
+ * 802.15.4g, Table 131 (p. 51)
+ *
+ *  @{
+ */
+#define IEEE802154_PHY_MR_FSK_2FSK_UNCODED_SFD_0 (0x90E4)
+#define IEEE802154_PHY_MR_FSK_2FSK_UNCODED_SFD_1 (0x7A0E)
+/** @} */
 
 /**
  * For the SUN PHYs, the value is 1 ms expressed in symbol periods, rounded
