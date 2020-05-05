@@ -57,31 +57,45 @@ rfc_cmd_prop_radio_div_setup_t rf_cmd_prop_radio_div_setup =
         .status = RFC_IDLE,
         .next_op = NULL, /* set by us */
         .start_time = 0,
-        .start_trigger.type = RFC_TRIG_NOW,
-        .start_trigger.ena_cmd = 0,
-        .start_trigger.trigger_no = 0,
-        .start_trigger.past_trig = 0,
-        .condition.rule = RFC_COND_ALWAYS,
-        .condition.skip_no = 0,
+        .start_trigger = {
+            .type = RFC_TRIG_NOW,
+            .ena_cmd = 0,
+            .trigger_no = 0,
+            .past_trig = 0
+        },
+        .condition = {
+            .rule = RFC_COND_ALWAYS,
+            .skip_no = 0
+        }
     },
-    .modulation.mod_type = 0x1,
-    .modulation.deviation = 0xC8,
-    .modulation.deviation_step_sz = 0x0,
-    .symbol_rate.prescale = 0xF,
-    .symbol_rate.rate_word = 0x20000,
-    .symbol_rate.decim_mode = 0x0,
+    .modulation = {
+        .mod_type = 0x1,
+        .deviation = 0xC8,
+        .deviation_step_sz = 0
+    },
+    .symbol_rate = {
+        .prescale = 0xF,
+        .rate_word = 0x20000,
+        .decim_mode = 0x0
+    },
     .rx_bw = 0x59,
-    .pream_conf.pream_bytes = 0x7,
-    .pream_conf.pream_mode = 0x0,
-    .format_conf.sw_bits = 0x18,
-    .format_conf.bit_reversal = 0x0,
-    .format_conf.msb_first = 0x1,
-    .format_conf.fec_mode = 0x0,
-    .format_conf.whiten_mode = 0x7,
-    .config.front_end_mode = 0x0,
-    .config.bias_mode = 0x1,
-    .config.analog_cfg_mode = 0x0,
-    .config.no_fs_powerup = 0x0,
+    .pream_conf = {
+        .pream_bytes = 7,
+        .pream_mode = 0,
+    },
+    .format_conf = {
+        .sw_bits = 18,
+        .bit_reversal = 0,
+        .msb_first = 1,
+        .fec_mode = 0,
+        .whiten_mode = 7
+    },
+    .config = {
+        .front_end_mode = 0,
+        .bias_mode = 1,
+        .analog_cfg_mode = 0,
+        .no_fs_powerup = 0
+    },
     .tx_power = 0x04C0,
     .reg_override = rf_prop_overrides,
     .center_freq = 0x0393,
@@ -96,17 +110,23 @@ rfc_cmd_fs_t rf_cmd_fs =
         .status = RFC_IDLE,
         .next_op = NULL, /* set by us */
         .start_time = 0,
-        .start_trigger.type = RFC_TRIG_NOW,
-        .start_trigger.ena_cmd = 0,
-        .start_trigger.trigger_no = 0,
-        .start_trigger.past_trig = 0,
-        .condition.rule = RFC_COND_ALWAYS,
-        .condition.skip_no = 0,
+        .start_trigger = {
+            .type = RFC_TRIG_NOW,
+            .ena_cmd = 0,
+            .trigger_no = 0,
+            .past_trig = 0
+        },
+        .condition = {
+            .rule = RFC_COND_ALWAYS,
+            .skip_no = 0
+        }
     },
-    .frequency = 0x0393, /* set by us */
+    .frequency = 0, /* set by us */
     .fract_freq = 0, /* set by us */
-    .synth_conf.txmode = 0,
-    .synth_conf.ref_freq = 0,
+    .synth_conf = {
+        .txmode = 0,
+        .ref_freq = 0
+    },
     .__dummy0 = 0,
     .__dummy1 = 0,
     .__dummy2 = 0,
@@ -120,27 +140,37 @@ rfc_cmd_prop_tx_adv_t rf_cmd_prop_tx_adv =
         .status = RFC_IDLE,
         .next_op = NULL, /* set by us */
         .start_time = 0,
-        .start_trigger.type = RFC_TRIG_NOW,
-        .start_trigger.ena_cmd = 0,
-        .start_trigger.trigger_no = 0,
-        .start_trigger.past_trig = 0,
-        .condition.rule = RFC_COND_ALWAYS,
-        .condition.skip_no = 0x0,
+        .start_trigger = {
+            .type = RFC_TRIG_NOW,
+            .ena_cmd = 0,
+            .trigger_no = 0,
+            .past_trig = 0
+        },
+        .condition = {
+            .rule = RFC_COND_ALWAYS,
+            .skip_no = 0
+        },
     },
-    .pkt_conf.fs_off = 0x0,
-    .pkt_conf.use_crc = 0x1,
-    .pkt_conf.crc_inc_sw = 0x0,
-    .pkt_conf.crc_inc_hdr = 0x0,
-    .num_hdr_bits = 0x10,
-    .pkt_len = 0x0014,
-    .start_conf.ext_tx_trig = 0x0,
-    .start_conf.input_mode = 0x0,
-    .start_conf.source = 0x0,
-    .pre_trigger.type = RFC_TRIG_NOW,
-    .pre_trigger.ena_cmd = 0x0,
-    .pre_trigger.trigger_no = 0x0,
-    .pre_trigger.past_trig = 0x0,
-    .pre_time = 0x00000000,
+    .pkt_conf = {
+        .fs_off = 0,
+        .use_crc = 1,
+        .crc_inc_sw = 0,
+        .crc_inc_hdr = 0
+    },
+    .num_hdr_bits = IEEE802154_PHY_MR_FSK_PHR_LEN * 8,
+    .pkt_len = 0, /*< set by us */
+    .start_conf = {
+        .ext_tx_trig = 0,
+        .input_mode = 0,
+        .source = 0
+    },
+    .pre_trigger = {
+        .type = RFC_TRIG_NOW,
+        .ena_cmd = 0,
+        .trigger_no = 0,
+        .past_trig = 0
+    },
+    .pre_time = 0,
     .sync_word = 0x0055904E,
     .pkt = 0 /* set by us */
 };
@@ -152,44 +182,58 @@ rfc_cmd_prop_rx_adv_t rf_cmd_prop_rx_adv =
         .status = RFC_IDLE,
         .next_op = NULL, /* set by us */
         .start_time = 0,
-        .start_trigger.type = RFC_TRIG_NOW,
-        .start_trigger.ena_cmd = 0,
-        .start_trigger.trigger_no = 0,
-        .start_trigger.past_trig = 0,
-        .condition.rule = RFC_COND_ALWAYS,
-        .condition.skip_no = 0,
+        .start_trigger = {
+            .type = RFC_TRIG_NOW,
+            .ena_cmd = 0,
+            .trigger_no = 0,
+            .past_trig = 0
+        },
+        .condition = {
+            .rule = RFC_COND_ALWAYS,
+            .skip_no = 0
+        }
     },
-    .pkt_conf.fs_off = 0x0,
-    .pkt_conf.repeat_ok = 0x1,
-    .pkt_conf.repeat_nok = 0x1,
-    .pkt_conf.use_crc = 0x1,
-    .pkt_conf.crc_inc_sw = 0x0,
-    .pkt_conf.crc_inc_hdr = 0x0,
-    .pkt_conf.end_type = 0x0,
-    .pkt_conf.filter_op = 0x1,
-    .rx_conf.auto_flush_ignored = 0x1,
-    .rx_conf.auto_flush_crc_err = 0x1,
-    .rx_conf.include_hdr = 0x0,
-    .rx_conf.include_crc = 0x0,
-    .rx_conf.append_rssi = 0x1,
-    .rx_conf.append_timestamp = 0x0,
-    .rx_conf.append_status = 0x1,
+    .pkt_conf = {
+        .fs_off = 0,
+        .repeat_ok = 1,
+        .repeat_nok = 1,
+        .use_crc = 1,
+        .crc_inc_sw = 0,
+        .crc_inc_hdr = 0,
+        .end_type = 0,
+        .filter_op = 1
+    },
+    .rx_conf = {
+        .auto_flush_ignored = 1,
+        .auto_flush_crc_err = 1,
+        .include_hdr = 0,
+        .include_crc = 0,
+        .append_rssi = 1,
+        .append_timestamp = 0,
+        .append_status = 1
+    },
     .sync_word0 = 0x0055904E,
-    .sync_word1 = 0x00000000,
+    .sync_word1 = 0,
     .max_pkt_len = IEEE802154G_FRAME_LEN_MAX,
-    .hdr_conf.num_hdr_bits = 0x10,
-    .hdr_conf.len_pos = 0x0,
-    .hdr_conf.num_len_bits = 0xB,
-    .addr_conf.addr_type = 0x0,
-    .addr_conf.addr_size = 0x0,
-    .addr_conf.addr_pos = 0x0,
-    .addr_conf.num_addr = 0x0,
-    .len_offset = 0xFC,
-    .end_trigger.type = 0x1,
-    .end_trigger.ena_cmd = 0x0,
-    .end_trigger.trigger_no = 0x0,
-    .end_trigger.past_trig = 0x0,
-    .end_time = 0x00000000,
+    .hdr_conf = {
+        .num_hdr_bits = IEEE802154_PHY_MR_FSK_PHR_LEN * 8,
+        .len_pos = 0,
+        .num_len_bits = 11
+    },
+    .addr_conf = {
+        .addr_type = 0,
+        .addr_size = 0,
+        .addr_pos = 0,
+        .num_addr = 0
+    },
+    .len_offset = -4,
+    .end_trigger = {
+        .type = RFC_TRIG_NEVER,
+        .ena_cmd = 0,
+        .trigger_no = 0,
+        .past_trig = 0
+    },
+    .end_time = 0,
     .addr = 0, /* unused */
     .queue = 0, /* set by us */
     .output = 0 /* set by us */
