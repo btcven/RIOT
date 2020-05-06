@@ -32,17 +32,29 @@
 #include "cpu.h"
 
 #define TX_BUF_SIZE  (IEEE802154_PHY_MR_FSK_PHR_LEN + IEEE802154G_FRAME_LEN_MAX)
-
-static uint8_t _tx_buf[TX_BUF_SIZE];
-
+#define RX_BUF_SIZE  (IEEE802154G_FRAME_LEN_MAX + sizeof(rfc_data_entry_t) + 1)
 #define RX_BUF_NUMOF (CONFIG_CC26x2_CC13X2_RF_RX_BUF_NUMOF)
-#define RX_BUF_SIZE  (IEEE802154G_FRAME_LEN_MAX + sizeof(rfc_data_entry_t))
 
+/**
+ * @brief   TX buffer
+ */
+static uint8_t _tx_buf[TX_BUF_SIZE];
+/**
+ * @brief   RX buffers
+ */
 static uint8_t _rx_buf[RX_BUF_NUMOF][RX_BUF_SIZE];
-
-static rfc_data_queue_t _rx_queue; /**< RX queue */
-
-static cc26x2_cc13x2_rf_netdev_t *_netdev; /**< Netdev pointer to use in IRQs */
+/**
+ * @brief   RX queue
+ */
+static rfc_data_queue_t _rx_queue;
+/**
+ * @brief   RAT timer offset
+ */
+static rfc_ratmr_t _rat_offset;
+/**
+ * @brief   Netdev pointer to use in IRQs
+ */
+static cc26x2_cc13x2_rf_netdev_t *_netdev;
 
 /**
  * @brief   Is NETOPT_TX_END_IRQ enabled?
@@ -50,7 +62,6 @@ static cc26x2_cc13x2_rf_netdev_t *_netdev; /**< Netdev pointer to use in IRQs */
 static bool _tx_end_irq;
 
 static void _rx_start(void);
-static bool _is_in_rx(void);
 
 static void _rfc_isr(void)
 {
@@ -66,28 +77,22 @@ static void _rfc_isr(void)
     if (RFC_DBELL->RFCPEIFG & CPE_IRQ_LAST_COMMAND_DONE) {
         RFC_DBELL_NONBUF->RFCPEIFG = ~CPE_IRQ_LAST_COMMAND_DONE;
 
-        if (rf_cmd_prop_rx_adv.op.status == RFC_PROP_DONE_STOPPED ||
-            rf_cmd_prop_rx_adv.op.status == RFC_PROP_DONE_ABORT) {
-            DEBUG_PUTS("_rfc_isr: RX abort");
-            rf_cmd_prop_rx_adv.op.status = 0;
-            /* Do nothing */
-        }
-        else if (rf_cmd_prop_radio_div_setup.op.status == RFC_PROP_DONE_OK &&
-                 rf_cmd_fs.op.status == RFC_DONE_OK) {
-            DEBUG_PUTS("_rfc_isr: init done");
-
-            rf_cmd_prop_radio_div_setup.op.status = 0;
-            rf_cmd_fs.op.status = 0;
+        if (rf_cmd_prop_radio_div_setup.status == RFC_PROP_DONE_OK &&
+                 rf_cmd_fs.status == RFC_DONE_OK) {
+            rf_cmd_prop_radio_div_setup.status = RFC_IDLE;
+            rf_cmd_fs.status = RFC_IDLE;
             _rx_start();
+
+            DEBUG_PUTS("_rfc_isr: init done");
         }
-        else if (rf_cmd_prop_tx_adv.op.status == RFC_PROP_DONE_OK) {
-            DEBUG_PUTS("_rfc_isr: TX done");
-            rf_cmd_prop_tx_adv.op.status = 0;
+        else if (rf_cmd_prop_tx_adv.status == RFC_PROP_DONE_OK) {
+            rf_cmd_prop_tx_adv.status = RFC_IDLE;
             _rx_start();
             if (_tx_end_irq) {
                 _netdev->tx_complete = true;
                 netdev_trigger_event_isr((netdev_t *)_netdev);
             }
+            DEBUG_PUTS("_rfc_isr: TX done");
         }
     }
 }
@@ -95,8 +100,6 @@ static void _rfc_isr(void)
 static void _rx_start(void)
 {
     DEBUG_PUTS("_rx_start()");
-    rf_cmd_prop_rx_adv.op.status = RFC_PENDING;
-    rf_cmd_prop_rx_adv.queue = &_rx_queue;
 
     /* Start RX */
     uint32_t cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_prop_rx_adv);
@@ -106,32 +109,37 @@ static void _rx_start(void)
     }
 }
 
-static bool _is_in_rx(void)
-{
-    uint8_t status = rf_cmd_prop_rx_adv.op.status;
-
-    return (status == RFC_ACTIVE) || (status == RFC_PENDING);
-}
-
-static bool _is_in_tx(void)
-{
-    uint8_t status = rf_cmd_prop_tx_adv.op.status;
-
-    return (status == RFC_ACTIVE) || (status == RFC_PENDING);
-}
-
 static int _send(netdev_t *dev, const iolist_t *iolist)
 {
     (void)dev;
     DEBUG_PUTS("_send");
 
-    if (_is_in_rx()) {
-        DEBUG_PUTS("_send: aborting");
-        cc26x2_cc13x2_rfc_abort_cmd();
-    }
+    unsigned key = irq_disable();
 
-    /* Wait for previous TX (if any) to finish */
-    while (_is_in_tx()) {}
+    rfc_op_t *op = cc26x2_cc13x2_rfc_last_cmd();
+    if (op->status == RFC_PENDING || op->status == RFC_ACTIVE) {
+        /* If RX, abort to finish the command */
+        if (op->command_no == RFC_CMD_PROP_RX_ADV) {
+            DEBUG_PUTS("_send: aborting");
+            cc26x2_cc13x2_rfc_abort_cmd();
+        }
+
+        /* Wait for command to finish */
+        while ((RFC_DBELL_NONBUF->RFCPEIFG & CPE_IRQ_LAST_COMMAND_DONE) == 0) {}
+
+        /* A last command done interrupt is generated, clean it up so the
+         * interrupt handler is not called */
+        RFC_DBELL_NONBUF->RFCPEIFG = ~CPE_IRQ_LAST_COMMAND_DONE;
+        op->status = RFC_IDLE;
+
+        /* Inform TX ended if we were transmitting */
+        if (op->command_no == RFC_CMD_PROP_TX_ADV) {
+            if (_tx_end_irq) {
+                _netdev->tx_complete = true;
+                netdev_trigger_event_isr((netdev_t *)_netdev);
+            }
+        }
+    }
 
     size_t len = 0;
     /* Reserve the first bytes of the PHR */
@@ -161,18 +169,21 @@ static int _send(netdev_t *dev, const iolist_t *iolist)
     _tx_buf[0] = ((total_length >> 0) & 0xFF);
     _tx_buf[1] = ((total_length >> 8) & 0xFF) + 0x08 + 0x10;
 
-    rf_cmd_prop_tx_adv.op.status = RFC_PENDING;
+    rf_cmd_prop_tx_adv.status = RFC_PENDING;
     rf_cmd_prop_tx_adv.pkt = _tx_buf;
     rf_cmd_prop_tx_adv.pkt_len = IEEE802154_PHY_MR_FSK_PHR_LEN + len;
 
     uint32_t cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_prop_tx_adv);
 
+    int ret = len;
     if ((cmdsta & 0xFF) != RFC_CMDSTA_DONE) {
         DEBUG_PUTS("_send: TX send failed!");
-        return -EIO;
+        rf_cmd_prop_tx_adv.status = RFC_IDLE;
+        ret = -EIO;
     }
 
-    return len;
+    irq_restore(key);
+    return ret;
 }
 
 static int _recv(netdev_t *dev, void *buf, size_t len, void *info)
@@ -294,23 +305,39 @@ static int _init(netdev_t *dev)
     _rx_queue.curr_entry = _rx_buf[0];
     _rx_queue.last_entry = NULL;
 
+    /* Use _rx_queue in RX command */
+    rf_cmd_prop_rx_adv.queue = &_rx_queue;
+
     /* Tune the radio to the given frequency */
     rf_cmd_fs.frequency = 915;
     rf_cmd_fs.fract_freq = 0;
 
     /* Chain the CMD_FS command after running setup */
-    rf_cmd_prop_radio_div_setup.op.condition.rule = RFC_COND_ALWAYS;
-    rf_cmd_prop_radio_div_setup.op.condition.skip_no = 0;
-    rf_cmd_prop_radio_div_setup.op.next_op = (rfc_op_t *)&rf_cmd_fs;
+    rf_cmd_prop_radio_div_setup.condition.rule = RFC_COND_ALWAYS;
+    rf_cmd_prop_radio_div_setup.condition.skip_no = 0;
+    rf_cmd_prop_radio_div_setup.next_op = (rfc_op_t *)&rf_cmd_fs;
 
     /* Initialize radio driver in proprietary setup for the Sub-GHz band.
      * To use Sub-GHz we need to use CMD_PROP_RADIO_DIV_SETUP as our setup
      * command. */
-    cc26x2_cc13x2_rfc_init((rfc_op_t *)&rf_cmd_prop_radio_div_setup,
-                           rf_patch_cpe_prop, _rfc_isr);
+    cc26x2_cc13x2_rfc_init(rf_patch_cpe_prop, _rfc_isr);
 
     if (cc26x2_cc13x2_rfc_power_on() < 0) {
         DEBUG_PUTS("_init: cc26x2_cc13x2_rfc_power_on failed!");
+        return -1;
+    }
+
+    /* Enable last command done interrupt */
+    RFC_DBELL_NONBUF->RFCPEIEN |= CPE_IRQ_LAST_COMMAND_DONE;
+
+    /* Run radio setup command after we start the RAT */
+    rf_cmd_sync_start_rat.next_op = &rf_cmd_prop_radio_div_setup;
+    rf_cmd_sync_start_rat.condition.rule = RFC_COND_ALWAYS;
+    rf_cmd_sync_start_rat.rat0 = _rat_offset;
+
+    uint32_t cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_sync_start_rat);
+    if (cmdsta != RFC_CMDSTA_DONE) {
+        DEBUG("rfc: radio setup failed! CMDSTA = %lx\n", cmdsta);
         return -1;
     }
 

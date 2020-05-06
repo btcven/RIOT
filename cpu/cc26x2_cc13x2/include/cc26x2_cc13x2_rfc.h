@@ -37,7 +37,7 @@ extern "C" {
  * @param[in] cpe_patch_fn CPE patch function, can be NULL.
  * @param[in] handler_cb   IRQ handler.
  */
-void cc26x2_cc13x2_rfc_init(rfc_op_t *radio_setup, void (* cpe_patch_fn)(void),
+void cc26x2_cc13x2_rfc_init(void (* cpe_patch_fn)(void),
                             void ( *handler_cb)(void));
 
 /**
@@ -52,6 +52,13 @@ void cc26x2_cc13x2_rfc_init(rfc_op_t *radio_setup, void (* cpe_patch_fn)(void),
  * @return -1 on failure.
  */
 int cc26x2_cc13x2_rfc_power_on(void);
+
+/**
+ * @brief   Get last command sent to the RF Core.
+ *
+ * @return Pointer to last command.
+ */
+rfc_op_t *cc26x2_cc13x2_rfc_last_cmd(void);
 
 /**
  * @brief   Send a command to the RF Core.

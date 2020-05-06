@@ -37,6 +37,14 @@ extern "C" {
 #define CONFIG_CC26x2_CC13X2_RF_RX_BUF_NUMOF (4)
 #endif
 
+
+/**
+ * @brief   CMD_SYNC_START_RAT
+ *
+ * Synchronously start the RAT
+ */
+extern rfc_cmd_sync_start_rat_t rf_cmd_sync_start_rat;
+
 /**
  * @brief   CMD_PROP_RADIO_DIV_SETUP
  *

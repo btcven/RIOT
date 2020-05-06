@@ -26,25 +26,6 @@
 
 static uint32_t _rfc_execute_sync(uint32_t cmd);
 
-static rfc_cmd_sync_start_rat_t _start_rat = {
-    .op.command_no = RFC_CMD_SYNC_START_RAT,
-    .op.status = RFC_IDLE, /* set by RF Core */
-    .op.next_op = NULL, /* set by us */
-    .op.start_time = 0,
-    .op.start_trigger.type = RFC_TRIG_NOW,
-    .op.start_trigger.ena_cmd = 0,
-    .op.start_trigger.trigger_no = 0,
-    .op.start_trigger.past_trig =0,
-    .op.condition.rule = RFC_COND_STOP_ON_FALSE,
-    .op.condition.skip_no = 0,
-    .__dummy0 = 0,
-    .rat0 = 0, /* set by us */
-};
-
-/**
- * @brief   PHY radio setup command
- */
-static rfc_op_t *_radio_setup;
 /**
  * @brief   Command and Packet Engine (CPE) patch function
  */
@@ -72,12 +53,11 @@ static inline rfc_op_t *_last_in_chain(rfc_op_t *op)
     return curr_op;
 }
 
-void cc26x2_cc13x2_rfc_init(rfc_op_t *radio_setup, void (* cpe_patch_fn)(void),
+void cc26x2_cc13x2_rfc_init(void (* cpe_patch_fn)(void),
                             void (* handler_cb)(void))
 {
-    assert(radio_setup != NULL);
+    assert(handler_cb != NULL);
 
-    _radio_setup = radio_setup;
     _cpe_patch_fn = cpe_patch_fn;
     _rat_offset = 0;
     _last_command = NULL;
@@ -93,10 +73,6 @@ void cc26x2_cc13x2_rfc_init(rfc_op_t *radio_setup, void (* cpe_patch_fn)(void),
 int cc26x2_cc13x2_rfc_power_on(void)
 {
     unsigned key = irq_disable();
-
-    /* Add radio setup to the last command as in the power-up sequence we'll
-     * execute it */
-    _last_command = _radio_setup;
 
     /* Enable RF Core power domain */
     if (!power_is_domain_enabled(POWER_DOMAIN_RFC)) {
@@ -135,41 +111,35 @@ int cc26x2_cc13x2_rfc_power_on(void)
     osc_hf_source_switch(OSC_XOSC_HF);
 
     /* Patch CPE */
-    _cpe_patch_fn();
+    if (_cpe_patch_fn != NULL) {
+        _cpe_patch_fn();
+    }
 
     /* Turn on the clock line to the radio core, this is necessary to use the
      * CMD_SYNC_START_RAT and the CMD_SYNC_STOP_RAT commands. */
     AON_RTC->CTL |= AON_RTC_CTL_RTC_UPD_EN;
-
-    /* Enable last command done interrupt */
-    RFC_DBELL_NONBUF->RFCPEIEN |= CPE_IRQ_LAST_COMMAND_DONE;
-
-    /* Run radio setup command after we start the RAT */
-    _start_rat.op.next_op = _radio_setup;
-    _start_rat.rat0 = _rat_offset;
-
-    uint32_t cmdsta = _rfc_execute_sync((uint32_t)&_start_rat);
-    if (cmdsta != RFC_CMDSTA_DONE) {
-        DEBUG("rfc: radio setup failed! CMDSTA = %lx\n", cmdsta);
-        return -1;
-    }
 
     irq_restore(key);
 
     return 0;
 }
 
+rfc_op_t *cc26x2_cc13x2_rfc_last_cmd(void)
+{
+    return _last_command;
+}
+
 uint32_t cc26x2_cc13x2_rfc_send_cmd(rfc_op_t *op)
 {
     assert(op);
+
+    unsigned key = irq_disable();
 
     /* Find the last operation in the chain (if any) */
     rfc_op_t *curr_op = _last_in_chain(_last_command);
 
     /* Wait while the last operation finishes */
     while (curr_op->status == RFC_PENDING ||curr_op->status == RFC_ACTIVE) {}
-
-    unsigned key = irq_disable();
 
     _last_command = op;
 
@@ -194,6 +164,8 @@ void cc26x2_cc13x2_rfc_abort_cmd(void)
  */
 static uint32_t _rfc_execute_sync(uint32_t cmd)
 {
+    unsigned key = irq_disable();
+
     /* Wait until the doorbell becomes available */
     while (RFC_DBELL->CMDR != 0) {}
     RFC_DBELL->RFACKIFG = 0;
@@ -205,8 +177,11 @@ static uint32_t _rfc_execute_sync(uint32_t cmd)
     while (!RFC_DBELL->RFACKIFG) {}
     RFC_DBELL->RFACKIFG = 0;
 
-    /* Return with the content of status register */
-    return RFC_DBELL->CMDSTA;
+    /* Return the content of status register */
+    uint32_t cmdsta = RFC_DBELL->CMDSTA;
+    irq_restore(key);
+
+    return cmdsta;
 }
 
 void isr_rfc_cpe0(void)
@@ -218,5 +193,6 @@ void isr_rfc_cpe0(void)
 void isr_rfc_cpe1(void)
 {
     DEBUG_PUTS("isr_rfc_cpe1: internal error");
+    RFC_DBELL_NONBUF->RFCPEIFG = ~CPE_IRQ_INTERNAL_ERROR;
     cortexm_isr_end();
 }

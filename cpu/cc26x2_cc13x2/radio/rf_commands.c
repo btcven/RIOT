@@ -52,23 +52,41 @@ static uint32_t rf_prop_overrides[] =
     RFC_END_OVERRIDE
 };
 
+rfc_cmd_sync_start_rat_t rf_cmd_sync_start_rat =
+{
+    .command_no = RFC_CMD_SYNC_START_RAT,
+    .status = RFC_IDLE,
+    .next_op = NULL, /* set by us */
+    .start_time = 0,
+    .start_trigger = {
+        .type = RFC_TRIG_NOW,
+        .ena_cmd = 0,
+        .trigger_no = 0,
+        .past_trig = 0,
+    },
+    .condition = {
+        .rule = RFC_COND_NEVER,
+        .skip_no = 0,
+    },
+    .__dummy0 = 0,
+    .rat0 = 0, /* set by us */
+};
+
 rfc_cmd_prop_radio_div_setup_t rf_cmd_prop_radio_div_setup =
 {
-    .op = {
-        .command_no = RFC_CMD_PROP_RADIO_DIV_SETUP,
-        .status = RFC_IDLE,
-        .next_op = NULL, /* set by us */
-        .start_time = 0,
-        .start_trigger = {
-            .type = RFC_TRIG_NOW,
-            .ena_cmd = 0,
-            .trigger_no = 0,
-            .past_trig = 0
-        },
-        .condition = {
-            .rule = RFC_COND_ALWAYS,
-            .skip_no = 0
-        }
+    .command_no = RFC_CMD_PROP_RADIO_DIV_SETUP,
+    .status = RFC_IDLE,
+    .next_op = NULL, /* set by us */
+    .start_time = 0,
+    .start_trigger = {
+        .type = RFC_TRIG_NOW,
+        .ena_cmd = 0,
+        .trigger_no = 0,
+        .past_trig = 0
+    },
+    .condition = {
+        .rule = RFC_COND_NEVER,
+        .skip_no = 0
     },
     .modulation = {
         .mod_type = RFC_MOD_TYPE_GFSK,
@@ -107,21 +125,19 @@ rfc_cmd_prop_radio_div_setup_t rf_cmd_prop_radio_div_setup =
 
 rfc_cmd_fs_t rf_cmd_fs =
 {
-    .op = {
-        .command_no = RFC_CMD_FS,
-        .status = RFC_IDLE,
-        .next_op = NULL, /* set by us */
-        .start_time = 0,
-        .start_trigger = {
-            .type = RFC_TRIG_NOW,
-            .ena_cmd = 0,
-            .trigger_no = 0,
-            .past_trig = 0
-        },
-        .condition = {
-            .rule = RFC_COND_ALWAYS,
-            .skip_no = 0
-        }
+    .command_no = RFC_CMD_FS,
+    .status = RFC_IDLE,
+    .next_op = NULL, /* set by us */
+    .start_time = 0,
+    .start_trigger = {
+        .type = RFC_TRIG_NOW,
+        .ena_cmd = 0,
+        .trigger_no = 0,
+        .past_trig = 0
+    },
+    .condition = {
+        .rule = RFC_COND_NEVER,
+        .skip_no = 0
     },
     .frequency = 0, /* set by us */
     .fract_freq = 0, /* set by us */
@@ -137,21 +153,19 @@ rfc_cmd_fs_t rf_cmd_fs =
 
 rfc_cmd_prop_tx_adv_t rf_cmd_prop_tx_adv =
 {
-    .op = {
-        .command_no = RFC_CMD_PROP_TX_ADV,
-        .status = RFC_IDLE,
-        .next_op = NULL, /* set by us */
-        .start_time = 0,
-        .start_trigger = {
-            .type = RFC_TRIG_NOW,
-            .ena_cmd = 0,
-            .trigger_no = 0,
-            .past_trig = 0
-        },
-        .condition = {
-            .rule = RFC_COND_ALWAYS,
-            .skip_no = 0
-        },
+    .command_no = RFC_CMD_PROP_TX_ADV,
+    .status = RFC_IDLE,
+    .next_op = NULL, /* set by us */
+    .start_time = 0,
+    .start_trigger = {
+        .type = RFC_TRIG_NOW,
+        .ena_cmd = 0,
+        .trigger_no = 0,
+        .past_trig = 0
+    },
+    .condition = {
+        .rule = RFC_COND_NEVER,
+        .skip_no = 0
     },
     .pkt_conf = {
         .fs_off = 0,
@@ -179,21 +193,19 @@ rfc_cmd_prop_tx_adv_t rf_cmd_prop_tx_adv =
 
 rfc_cmd_prop_rx_adv_t rf_cmd_prop_rx_adv =
 {
-    .op = {
-        .command_no = RFC_CMD_PROP_RX_ADV,
-        .status = RFC_IDLE,
-        .next_op = NULL, /* set by us */
-        .start_time = 0,
-        .start_trigger = {
-            .type = RFC_TRIG_NOW,
-            .ena_cmd = 0,
-            .trigger_no = 0,
-            .past_trig = 0
-        },
-        .condition = {
-            .rule = RFC_COND_ALWAYS,
-            .skip_no = 0
-        }
+    .command_no = RFC_CMD_PROP_RX_ADV,
+    .status = RFC_IDLE,
+    .next_op = NULL, /* set by us */
+    .start_time = 0,
+    .start_trigger = {
+        .type = RFC_TRIG_NOW,
+        .ena_cmd = 0,
+        .trigger_no = 0,
+        .past_trig = 0
+    },
+    .condition = {
+        .rule = RFC_COND_NEVER,
+        .skip_no = 0
     },
     .pkt_conf = {
         .fs_off = 0,
