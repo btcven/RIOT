@@ -69,38 +69,14 @@ static void _rfc_isr(void)
     if ((RFC_DBELL->RFCPEIFG & CPE_IRQ_RX_ENTRY_DONE) &&
         (RFC_DBELL->RFCPEIEN & CPE_IRQ_RX_ENTRY_DONE)) {
         RFC_DBELL_NONBUF->RFCPEIFG = ~CPE_IRQ_RX_ENTRY_DONE;
-
         _netdev->rx_complete = true;
         netdev_trigger_event_isr((netdev_t *)_netdev);
-    }
-
-    if (RFC_DBELL->RFCPEIFG & CPE_IRQ_LAST_COMMAND_DONE) {
-        RFC_DBELL_NONBUF->RFCPEIFG = ~CPE_IRQ_LAST_COMMAND_DONE;
-
-        if (rf_cmd_prop_radio_div_setup.status == RFC_PROP_DONE_OK &&
-                 rf_cmd_fs.status == RFC_DONE_OK) {
-            rf_cmd_prop_radio_div_setup.status = RFC_IDLE;
-            rf_cmd_fs.status = RFC_IDLE;
-            _rx_start();
-
-            DEBUG_PUTS("_rfc_isr: init done");
-        }
-        else if (rf_cmd_prop_tx_adv.status == RFC_PROP_DONE_OK) {
-            rf_cmd_prop_tx_adv.status = RFC_IDLE;
-            _rx_start();
-            if (_tx_end_irq) {
-                _netdev->tx_complete = true;
-                netdev_trigger_event_isr((netdev_t *)_netdev);
-            }
-            DEBUG_PUTS("_rfc_isr: TX done");
-        }
     }
 }
 
 static void _rx_start(void)
 {
     DEBUG_PUTS("_rx_start()");
-
     /* Start RX */
     uint32_t cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_prop_rx_adv);
 
@@ -116,13 +92,9 @@ static int _send(netdev_t *dev, const iolist_t *iolist)
 
     unsigned key = irq_disable();
 
-    rfc_op_t *op = cc26x2_cc13x2_rfc_last_cmd();
-    if (op->status == RFC_PENDING || op->status == RFC_ACTIVE) {
-        /* If RX, abort to finish the command */
-        if (op->command_no == RFC_CMD_PROP_RX_ADV) {
-            DEBUG_PUTS("_send: aborting");
-            cc26x2_cc13x2_rfc_abort_cmd();
-        }
+    if (rf_cmd_prop_rx_adv.status == RFC_PENDING ||
+        rf_cmd_prop_rx_adv.status == RFC_ACTIVE) {
+        cc26x2_cc13x2_rfc_abort_cmd();
 
         /* Wait for command to finish */
         while ((RFC_DBELL_NONBUF->RFCPEIFG & CPE_IRQ_LAST_COMMAND_DONE) == 0) {}
@@ -130,15 +102,6 @@ static int _send(netdev_t *dev, const iolist_t *iolist)
         /* A last command done interrupt is generated, clean it up so the
          * interrupt handler is not called */
         RFC_DBELL_NONBUF->RFCPEIFG = ~CPE_IRQ_LAST_COMMAND_DONE;
-        op->status = RFC_IDLE;
-
-        /* Inform TX ended if we were transmitting */
-        if (op->command_no == RFC_CMD_PROP_TX_ADV) {
-            if (_tx_end_irq) {
-                _netdev->tx_complete = true;
-                netdev_trigger_event_isr((netdev_t *)_netdev);
-            }
-        }
     }
 
     size_t len = 0;
@@ -149,6 +112,7 @@ static int _send(netdev_t *dev, const iolist_t *iolist)
         len += iol->iol_len;
         if (len > (TX_BUF_SIZE - IEEE802154_PHY_MR_FSK_PHR_LEN)) {
             DEBUG_PUTS("_send: payload is too big!");
+            irq_restore(key);
             return -EOVERFLOW;
         }
 
@@ -175,20 +139,36 @@ static int _send(netdev_t *dev, const iolist_t *iolist)
 
     uint32_t cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_prop_tx_adv);
 
-    int ret = len;
     if ((cmdsta & 0xFF) != RFC_CMDSTA_DONE) {
         DEBUG_PUTS("_send: TX send failed!");
         rf_cmd_prop_tx_adv.status = RFC_IDLE;
-        ret = -EIO;
+        irq_restore(key);
+        return -EIO;
     }
 
+    /* Wait for command to finish */
+    while ((RFC_DBELL_NONBUF->RFCPEIFG & CPE_IRQ_LAST_COMMAND_DONE) == 0) {}
+    RFC_DBELL_NONBUF->RFCPEIFG = ~CPE_IRQ_LAST_COMMAND_DONE;
+
+    /* Restart RX */
+    _rx_start();
+
     irq_restore(key);
-    return ret;
+
+    /* Inform TX ended if we were transmitting */
+    if (_tx_end_irq) {
+        _netdev->tx_complete = true;
+        netdev_trigger_event_isr((netdev_t *)_netdev);
+    }
+
+    return len;
 }
 
 static int _recv(netdev_t *dev, void *buf, size_t len, void *info)
 {
     (void)dev;
+
+    unsigned key = irq_disable();
 
     rfc_data_entry_general_t *entry =
         (rfc_data_entry_general_t *)cc26x2_cc13x2_rfc_queue_recv(&_rx_queue);
@@ -214,16 +194,29 @@ static int _recv(netdev_t *dev, void *buf, size_t len, void *info)
     if (buf == NULL) {
         /* Without buf return only the length so it can be read later */
         if (len == 0) {
+            /* Drop packet if we don't have a payload, this might be a frame
+             * with Mode Switch (or maybe other frame type?) which doesn't
+             * include a payload, RIOT nor the MCU can't process these types of
+             * frames. The frame needs to be dropped of the queue because if
+             * we return 0 the upper layers won't call the function again (to
+             * read the payload this time) and it will not get marked as
+             * pending */
+            if (payload_len == 0) {
+                entry->status = RFC_DATA_ENTRY_PENDING;
+            }
+            irq_restore(key);
             return payload_len;
         }
         else {
             /* Discard entry */
             entry->status = RFC_DATA_ENTRY_PENDING;
+            irq_restore(key);
             return 0;
         }
     }
 
     if (payload_len > len) {
+        irq_restore(key);
         return -ENOSPC;
     }
 
@@ -231,6 +224,7 @@ static int _recv(netdev_t *dev, void *buf, size_t len, void *info)
 
     entry->status = RFC_DATA_ENTRY_PENDING;
 
+    irq_restore(key);
     return payload_len;
 }
 
@@ -327,20 +321,26 @@ static int _init(netdev_t *dev)
         return -1;
     }
 
-    /* Enable last command done interrupt */
-    RFC_DBELL_NONBUF->RFCPEIEN |= CPE_IRQ_LAST_COMMAND_DONE;
-
     /* Run radio setup command after we start the RAT */
     rf_cmd_sync_start_rat.next_op = &rf_cmd_prop_radio_div_setup;
     rf_cmd_sync_start_rat.condition.rule = RFC_COND_ALWAYS;
     rf_cmd_sync_start_rat.rat0 = _rat_offset;
 
+    unsigned key = irq_disable();
+
     uint32_t cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_sync_start_rat);
     if (cmdsta != RFC_CMDSTA_DONE) {
         DEBUG("rfc: radio setup failed! CMDSTA = %lx\n", cmdsta);
+        irq_restore(key);
         return -1;
     }
 
+    while ((RFC_DBELL_NONBUF->RFCPEIFG & CPE_IRQ_LAST_COMMAND_DONE) == 0) {}
+    RFC_DBELL_NONBUF->RFCPEIFG = ~CPE_IRQ_LAST_COMMAND_DONE;
+
+    _rx_start();
+
+    irq_restore(key);
     return 0;
 }
 
