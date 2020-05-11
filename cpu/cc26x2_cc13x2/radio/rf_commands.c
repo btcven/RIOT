@@ -22,7 +22,10 @@
 
 #define RX_BANDWIDTH_310KHZ (0x59) /**< RX bandwidth */
 
-/* Overrides for CMD_PROP_RADIO_DIV_SETUP */
+/* Overrides for CMD_PROP_RADIO_DIV_SETUP. These are overrides for some of the
+ * hardware parameters (Cortex-M0/RF Core), they are automatically generated
+ * by Smart RF. These are generated depending on the PHY mode and the device
+ * (this one is compatible with all devices) */
 static uint32_t rf_prop_overrides[] =
 {
     /* override_prop_common.xml
@@ -52,6 +55,14 @@ static uint32_t rf_prop_overrides[] =
     RFC_END_OVERRIDE
 };
 
+/**
+ * CMD_SYNC_START_RAT
+ *
+ * This commands starts the Radio Timer, needed to run time-dependant radio
+ * operations, and to chain commands. We only use the parameter `rat0` which
+ * is the previous RAT offset when it was stopped using CMD_SYNC_STOP_RAT,
+ * if no previous offset is present, 0 is fine.
+ */
 rfc_cmd_sync_start_rat_t rf_cmd_sync_start_rat =
 {
     .command_no = RFC_CMD_SYNC_START_RAT,
@@ -72,6 +83,14 @@ rfc_cmd_sync_start_rat_t rf_cmd_sync_start_rat =
     .rat0 = 0, /* set by us */
 };
 
+/**
+ * CMD_PROP_RADIO_DIV_SETUP
+ *
+ * This is the "setup" command for the radio, sets the necessary parameters for
+ * TX/RX and some configuration of the modulation, whitening, packet format,
+ * symbol rate, preamble configuration, receiver bandwidth, intermediate
+ * frequency, center frequency.
+ */
 rfc_cmd_prop_radio_div_setup_t rf_cmd_prop_radio_div_setup =
 {
     .command_no = RFC_CMD_PROP_RADIO_DIV_SETUP,
@@ -123,6 +142,11 @@ rfc_cmd_prop_radio_div_setup_t rf_cmd_prop_radio_div_setup =
     .lo_divider = 0x05
 };
 
+/**
+ * CMD_FS
+ *
+ * The Frequency Sinthesizer command, sets the channel frequency.
+ */
 rfc_cmd_fs_t rf_cmd_fs =
 {
     .command_no = RFC_CMD_FS,
@@ -151,6 +175,12 @@ rfc_cmd_fs_t rf_cmd_fs =
     .__dummy3 = 0
 };
 
+/**
+ * CMD_PROP_TX_ADV
+ *
+ * Advanced proprietary transmission. Despite the "proprietary" name, it's
+ * compatible with IEEE 802.15.4g. Fields set at runtime are: pkt and pkt_len.
+ */
 rfc_cmd_prop_tx_adv_t rf_cmd_prop_tx_adv =
 {
     .command_no = RFC_CMD_PROP_TX_ADV,
@@ -191,6 +221,12 @@ rfc_cmd_prop_tx_adv_t rf_cmd_prop_tx_adv =
     .pkt = 0 /* set by us */
 };
 
+/**
+ * CMD_PROP_RX_ADV
+ *
+ * Advanced proprietary RX. Sets the radio into RX mode, it keeps putting
+ * the RX queue. This command does not finish unless it's aborted/stopped.
+ */
 rfc_cmd_prop_rx_adv_t rf_cmd_prop_rx_adv =
 {
     .command_no = RFC_CMD_PROP_RX_ADV,
