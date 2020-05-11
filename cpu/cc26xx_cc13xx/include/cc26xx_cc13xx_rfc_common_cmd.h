@@ -92,7 +92,7 @@ typedef struct {
                                TX mode */
         uint8_t ref_freq:6; /**< 0h = Use default reference frequenc, others =
                                  Use reference frequency 48 MHz */
-    } synth_conf;
+    } synth_conf; /**< Synthesizer configuration */
     uint8_t __dummy0; /**< Reserved, always write 0 */
     uint8_t __dummy1; /**< Reserved */
     uint8_t __dummy2; /**< Reserved */

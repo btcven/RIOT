@@ -31,7 +31,7 @@ extern "C" {
 typedef uint32_t rfc_ratmr_t;
 
 /**
- * @enum    CMDSTA values
+ * @brief   CMDSTA values
  *
  * Values returned in result byte of CMDSTA
  */
@@ -86,7 +86,7 @@ enum {
 /** @} */
 
 /**
- * @enum    Definitions for trigger types
+ * @brief   Definitions for trigger types
  */
 enum {
     RFC_TRIG_NOW = 0,            /**< Triggers immediately */
@@ -114,7 +114,7 @@ enum {
 };
 
 /**
- * @enum    Definitions for conditional execution
+ * @brief   Definitions for conditional execution
  */
 enum {
     RFC_COND_ALWAYS = 0,         /**< Always run next command (except in case of
@@ -137,7 +137,7 @@ enum {
  * @{
  */
 /**
- * @enum    Operation not finished.
+ * @brief   Operation not finished.
  */
 enum {
     RFC_IDLE = 0x0000,           /**< Operation not started */
@@ -147,7 +147,7 @@ enum {
                                       another command */
 };
 /**
- * @enum    Operation finished normally
+ * @brief   Operation finished normally
  */
 enum {
     RFC_DONE_OK = 0x0400,        /**< Operation ended normally */
@@ -159,7 +159,7 @@ enum {
     RFC_DONE_FAILED = 0x0406,    /**< Scheduled immediate command failed */
 };
 /**
- * @enum    Operation finished with error
+ * @brief   Operation finished with error
  */
 enum {
     RFC_ERROR_PAST_START = 0x0800, /**< The start trigger occurred in the

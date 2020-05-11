@@ -425,7 +425,7 @@ typedef struct {
         uint16_t num_hdr_bits:6; /**< Number of bits in header (0--32) */
         uint16_t len_pos:5; /**< Position of length field in header (0--31) */
         uint16_t num_len_bits:5; /**< Number of bits in length field (0--16) */
-    } hdr_conf;
+    } hdr_conf; /**< Packet header configuration */
     struct {
         /**
          * 0: Address after header
@@ -444,7 +444,7 @@ typedef struct {
          */
         uint16_t addr_pos:5;
         uint16_t num_addr:5; /**< Number of addresses in address list */
-    } addr_conf;
+    } addr_conf; /**< Addresses configuration */
     int8_t len_offset; /**< Signed value to add to length field */
     rfc_trigger_t end_trigger; /**< Trigger for ending the operation */
     /**

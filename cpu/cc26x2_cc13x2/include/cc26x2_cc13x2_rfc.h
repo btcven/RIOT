@@ -33,7 +33,6 @@ extern "C" {
 /**
  * @brief   Initialize RF driver
  *
- * @param[in] radio_setup  The radio setup command.
  * @param[in] cpe_patch_fn CPE patch function, can be NULL.
  * @param[in] handler_cb   IRQ handler.
  */
