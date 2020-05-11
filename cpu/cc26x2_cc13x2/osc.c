@@ -20,9 +20,6 @@
 #include <assert.h>
 #include "cpu.h"
 
-#define ENABLE_DEBUG (1)
-#include "debug.h"
-
 static inline bool _hf_source_ready(void)
 {
     if (DDI_0_OSC->STAT0 & DDI_0_OSC_STAT0_PENDINGSCLKHFSWITCHING) {
