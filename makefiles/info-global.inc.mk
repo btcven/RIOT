@@ -1,15 +1,9 @@
-.PHONY: info-buildsizes info-buildsizes-diff info-features-missing \
-        info-boards-features-missing
-
-# Perform dependency resolution without having included
-# $(RIOTBASE)/Makefile.features for now. This results in no optional modules and
-# no architecture specific handling being done. The result will be a subset of
-# used modules and requirements that is present in for *all* boards, so this can
-# be cached to speed up individual dependency checks
-include $(RIOTMAKE)/defaultmodules.inc.mk
-# add default modules
-USEMODULE += $(filter-out $(DISABLE_MODULE),$(DEFAULT_MODULE))
-include $(RIOTMAKE)/dependency_resolution.inc.mk
+.PHONY: info-buildsizes \
+        info-buildsizes-diff \
+        info-boards-supported \
+        info-boards-features-missing \
+        info-boards-features-blacklisted \
+        #
 
 BOARDDIR_GLOBAL := $(BOARDDIR)
 USEMODULE_GLOBAL := $(USEMODULE)
@@ -35,7 +29,7 @@ define board_unsatisfied_features
   FEATURES_BLACKLIST:= $(FEATURES_BLACKLIST_GLOBAL)
 
   # Find matching board folder
-  BOARDDIR := $(word 1,$(foreach dir,$(BOARDSDIRS),$(wildcard $(dir)/$(BOARD)/.)))
+  BOARDDIR := $$(word 1,$$(foreach dir,$$(BOARDSDIRS),$$(wildcard $$(dir)/$$(BOARD)/.)))
 
   # Remove board specific variables set by Makefile.features/Makefile.dep
   FEATURES_PROVIDED :=
@@ -57,19 +51,19 @@ define board_unsatisfied_features
   ifneq (,$$(FEATURES_MISSING))
     # Skip full dependency resolution, as even without optional modules features
     # and architecture specific limitations already some features are missing
-    BOARDS_FEATURES_MISSING += "$(1) $$(FEATURES_MISSING)"
-    BOARDS_WITH_MISSING_FEATURES += $(1)
+    BOARDS_FEATURES_MISSING += "$$(BOARD) $$(FEATURES_MISSING)"
+    BOARDS_WITH_MISSING_FEATURES += $$(BOARD)
   else
     include $(RIOTMAKE)/dependency_resolution.inc.mk
 
     ifneq (,$$(FEATURES_MISSING))
-      BOARDS_FEATURES_MISSING += "$(1) $$(FEATURES_MISSING)"
-      BOARDS_WITH_MISSING_FEATURES += $(1)
+      BOARDS_FEATURES_MISSING += "$$(BOARD) $$(FEATURES_MISSING)"
+      BOARDS_WITH_MISSING_FEATURES += $$(BOARD)
     endif
 
     ifneq (,$$(FEATURES_USED_BLACKLISTED))
-      BOARDS_FEATURES_USED_BLACKLISTED += "$(1) $$(FEATURES_USED_BLACKLISTED)"
-      BOARDS_WITH_BLACKLISTED_FEATURES += $(1)
+      BOARDS_FEATURES_USED_BLACKLISTED += "$$(BOARD) $$(FEATURES_USED_BLACKLISTED)"
+      BOARDS_WITH_BLACKLISTED_FEATURES += $$(BOARD)
     endif
   endif
 
@@ -86,7 +80,7 @@ BOARDS_FEATURES_MISSING :=
 BOARDS_WITH_BLACKLISTED_FEATURES :=
 BOARDS_FEATURES_USED_BLACKLISTED :=
 
-$(foreach BOARD, $(BOARDS), $(eval $(call board_unsatisfied_features,$(BOARD))))
+$(foreach board,$(BOARDS),$(eval $(call board_unsatisfied_features,$(board))))
 BOARDS := $(filter-out $(BOARDS_WITH_MISSING_FEATURES) $(BOARDS_WITH_BLACKLISTED_FEATURES), $(BOARDS))
 
 info-buildsizes: SHELL=bash
@@ -125,6 +119,9 @@ info-boards-supported:
 
 info-boards-features-missing:
 	@for f in $(BOARDS_FEATURES_MISSING); do echo $${f}; done | column -t
+
+info-boards-features-blacklisted:
+	@for f in $(BOARDS_FEATURES_USED_BLACKLISTED); do echo $${f}; done | column -t
 
 # Reset BOARDSDIR so unchanged for makefiles included after, for now only
 # needed for buildtests.inc.mk
