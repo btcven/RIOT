@@ -28,6 +28,8 @@ extern "C" {
 
 #include "periph_conf.h"
 #include "periph/i2c.h"
+#include "periph/gpio.h"
+//typedef unsigned int gpio_t;
 
 /**
  * @brief Default I2C address of the BQ27441-G1A
