@@ -1,10 +1,10 @@
+BOARD ?= cc1352p-launchpad
 include ../Makefile.tests_common
 
 FEATURES_REQUIRED = periph_i2c
+FEATURES_OPTIONAL = periph_i2c_reconfigure
 
-USEMODULE += bq27441
+USEMODULE += shell
 USEMODULE += xtimer
-USEMODULE += periph_gpio_irq
-CFLAGS += -DDEVELHELP
 
 include $(RIOTBASE)/Makefile.include
