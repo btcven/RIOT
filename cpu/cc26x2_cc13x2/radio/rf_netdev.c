@@ -26,6 +26,8 @@
 #include "cc26xx_cc13xx_rfc_queue.h"
 #include "vendor/rf_patch_cpe_prop.h"
 
+#include "mutex.h"
+
 #define ENABLE_DEBUG (0)
 #include "debug.h"
 
@@ -61,6 +63,8 @@ static cc26x2_cc13x2_rf_netdev_t *_netdev;
  */
 static bool _tx_end_irq;
 
+static mutex_t _last_cmd = MUTEX_INIT;
+
 static void _rx_start(void);
 
 static void _rfc_isr(void)
@@ -69,8 +73,14 @@ static void _rfc_isr(void)
     if ((RFC_DBELL->RFCPEIFG & CPE_IRQ_RX_ENTRY_DONE) &&
         (RFC_DBELL->RFCPEIEN & CPE_IRQ_RX_ENTRY_DONE)) {
         RFC_DBELL_NONBUF->RFCPEIFG = ~CPE_IRQ_RX_ENTRY_DONE;
-        _netdev->rx_complete = true;
+        _netdev->rx_events++;
         netdev_trigger_event_isr((netdev_t *)_netdev);
+    }
+
+    if ((RFC_DBELL->RFCPEIFG & CPE_IRQ_LAST_COMMAND_DONE) &&
+        (RFC_DBELL->RFCPEIEN & CPE_IRQ_LAST_COMMAND_DONE)) {
+        RFC_DBELL_NONBUF->RFCPEIFG = ~CPE_IRQ_LAST_COMMAND_DONE;
+        mutex_unlock(&_last_cmd);
     }
 }
 
@@ -90,18 +100,10 @@ static int _send(netdev_t *dev, const iolist_t *iolist)
     (void)dev;
     DEBUG_PUTS("_send");
 
-    unsigned key = irq_disable();
-
     if (rf_cmd_prop_rx_adv.status == RFC_PENDING ||
         rf_cmd_prop_rx_adv.status == RFC_ACTIVE) {
         cc26x2_cc13x2_rfc_abort_cmd();
-
-        /* Wait for command to finish */
-        while ((RFC_DBELL_NONBUF->RFCPEIFG & CPE_IRQ_LAST_COMMAND_DONE) == 0) {}
-
-        /* A last command done interrupt is generated, clean it up so the
-         * interrupt handler is not called */
-        RFC_DBELL_NONBUF->RFCPEIFG = ~CPE_IRQ_LAST_COMMAND_DONE;
+        mutex_lock(&_last_cmd);
     }
 
     size_t len = 0;
@@ -112,7 +114,6 @@ static int _send(netdev_t *dev, const iolist_t *iolist)
         len += iol->iol_len;
         if (len > (TX_BUF_SIZE - IEEE802154_PHY_MR_FSK_PHR_LEN)) {
             DEBUG_PUTS("_send: payload is too big!");
-            irq_restore(key);
             return -EOVERFLOW;
         }
 
@@ -138,26 +139,19 @@ static int _send(netdev_t *dev, const iolist_t *iolist)
     rf_cmd_prop_tx_adv.pkt_len = IEEE802154_PHY_MR_FSK_PHR_LEN + len;
 
     uint32_t cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_prop_tx_adv);
-
     if ((cmdsta & 0xFF) != RFC_CMDSTA_DONE) {
         DEBUG_PUTS("_send: TX send failed!");
         rf_cmd_prop_tx_adv.status = RFC_IDLE;
-        irq_restore(key);
         return -EIO;
     }
-
-    /* Wait for command to finish */
-    while ((RFC_DBELL_NONBUF->RFCPEIFG & CPE_IRQ_LAST_COMMAND_DONE) == 0) {}
-    RFC_DBELL_NONBUF->RFCPEIFG = ~CPE_IRQ_LAST_COMMAND_DONE;
+    mutex_lock(&_last_cmd);
 
     /* Restart RX */
     _rx_start();
 
-    irq_restore(key);
-
     /* Inform TX ended if we were transmitting */
     if (_tx_end_irq) {
-        _netdev->tx_complete = true;
+        _netdev->tx_events++;
         netdev_trigger_event_isr((netdev_t *)_netdev);
     }
 
@@ -321,26 +315,22 @@ static int _init(netdev_t *dev)
         return -1;
     }
 
+    RFC_DBELL_NONBUF->RFCPEIEN |= CPE_IRQ_LAST_COMMAND_DONE;
+
     /* Run radio setup command after we start the RAT */
     rf_cmd_sync_start_rat.next_op = &rf_cmd_prop_radio_div_setup;
     rf_cmd_sync_start_rat.condition.rule = RFC_COND_ALWAYS;
     rf_cmd_sync_start_rat.rat0 = _rat_offset;
 
-    unsigned key = irq_disable();
-
     uint32_t cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_sync_start_rat);
     if (cmdsta != RFC_CMDSTA_DONE) {
         DEBUG("rfc: radio setup failed! CMDSTA = %lx\n", cmdsta);
-        irq_restore(key);
         return -1;
     }
-
-    while ((RFC_DBELL_NONBUF->RFCPEIFG & CPE_IRQ_LAST_COMMAND_DONE) == 0) {}
-    RFC_DBELL_NONBUF->RFCPEIFG = ~CPE_IRQ_LAST_COMMAND_DONE;
+    mutex_lock(&_last_cmd);
 
     _rx_start();
 
-    irq_restore(key);
     return 0;
 }
 
@@ -457,13 +447,13 @@ static void _isr(netdev_t *netdev)
 {
     cc26x2_cc13x2_rf_netdev_t *dev = (cc26x2_cc13x2_rf_netdev_t *)netdev;
 
-    if (dev->rx_complete) {
-        dev->rx_complete = false;
+    if (dev->rx_events > 0) {
+        dev->rx_events--;
         netdev->event_callback(netdev, NETDEV_EVENT_RX_COMPLETE);
     }
 
-    if (dev->tx_complete) {
-        dev->tx_complete = false;
+    if (dev->tx_events > 0) {
+        dev->tx_events--;
         netdev->event_callback(netdev, NETDEV_EVENT_TX_COMPLETE);
     }
 }
@@ -472,10 +462,12 @@ void cc26x2_cc13x2_rf_setup(cc26x2_cc13x2_rf_netdev_t *dev)
 {
     memset(dev, 0, sizeof(*dev));
 
-    dev->rx_complete = false;
-    dev->tx_complete = false;
+    dev->rx_events = 0;
+    dev->tx_events = 0;
 
     _netdev = dev;
+
+    mutex_lock(&_last_cmd);
 
     dev->netdev.netdev.driver = &cc26x2_cc13x2_rf_driver;
 }

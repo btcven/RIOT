@@ -80,8 +80,8 @@ extern netdev_driver_t cc26x2_cc13x2_rf_driver; /**< CC13x2 netdev driver*/
  */
 typedef struct {
     netdev_ieee802154_t netdev; /**< IEEE 802.15.4 network device */
-    bool rx_complete; /**< RX completed */
-    bool tx_complete; /**< TX completed */
+    int rx_events; /**< RX events completed */
+    int tx_events; /**< TX events completed */
 } cc26x2_cc13x2_rf_netdev_t;
 
 /**
