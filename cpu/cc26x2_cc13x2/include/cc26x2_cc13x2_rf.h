@@ -37,7 +37,6 @@ extern "C" {
 #define CONFIG_CC26x2_CC13X2_RF_RX_BUF_NUMOF (4)
 #endif
 
-
 /**
  * @brief   CMD_SYNC_START_RAT
  *
@@ -74,6 +73,19 @@ extern rfc_cmd_prop_tx_adv_t rf_cmd_prop_tx_adv;
 extern rfc_cmd_prop_rx_adv_t rf_cmd_prop_rx_adv;
 
 extern netdev_driver_t cc26x2_cc13x2_rf_driver; /**< CC13x2 netdev driver*/
+
+#define CC26X2_CC13X2_RF_PA_ENTRY(bias, gain, boost, coefficient) \
+    ((bias) << 0) | ((gain) << 6) | ((boost) << 8) | ((coefficient) << 9)
+
+/**
+ * @brief   RF PA table entry
+ */
+typedef struct {
+    uint8_t dbm; /**< PA entry value in dBm */
+    uint16_t val; /**< Coded value for the PA entry */
+} cc26x2_cc13x2_rf_pa_t;
+
+extern cc26x2_cc13x2_rf_pa_t cc26x2_cc13x2_rf_patable[];
 
 /**
  * @brief   IEEE 802.15.4 Sub-GHz netdev device.

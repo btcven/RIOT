@@ -305,6 +305,10 @@ static int _init(netdev_t *dev)
     rf_cmd_prop_radio_div_setup.condition.skip_no = 0;
     rf_cmd_prop_radio_div_setup.next_op = (rfc_op_t *)&rf_cmd_fs;
 
+    /* Maximum TX power by default */
+    cc26x2_cc13x2_rf_pa_t *tx_power = &cc26x2_cc13x2_rf_patable[0];
+    rf_cmd_prop_radio_div_setup.tx_power = tx_power->val;
+
     /* Initialize radio driver in proprietary setup for the Sub-GHz band.
      * To use Sub-GHz we need to use CMD_PROP_RADIO_DIV_SETUP as our setup
      * command. */
