@@ -181,7 +181,7 @@ static int _recv(netdev_t *dev, void *buf, size_t len, void *info)
     /* Save RX information. */
     if (info) {
         netdev_ieee802154_rx_info_t *ieee_info = info;
-        ieee_info->rssi = payload[payload_len];
+        ieee_info->rssi = (int8_t)payload[payload_len];
         ieee_info->lqi = payload[payload_len + 1];
     }
 
