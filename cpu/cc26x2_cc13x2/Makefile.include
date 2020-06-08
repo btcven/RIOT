@@ -1,5 +1,7 @@
 CPU_VARIANT = x2
 
+INCLUDES += -I$(RIOTCPU)/cc26x2_cc13x2/vendor
+
 VECTORS_O = $(BINDIR)/cc26xx_cc13xx/vectors.o
 
 ROM_START_ADDR ?= 0x00000000
