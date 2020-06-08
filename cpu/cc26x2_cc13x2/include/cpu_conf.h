@@ -21,6 +21,25 @@
 #ifndef CPU_CONF_H
 #define CPU_CONF_H
 
+/**
+ * @brief   Flash CCFG configuration
+ *
+ * This configuration option when enabled flashes the CCFG.
+ */
+#ifndef CONFIG_CC26X2_CC13X2_FLASH_CCFG
+#define CONFIG_CC26X2_CC13X2_FLASH_CCFG (0)
+#endif
+
+/**
+ * @brief   Force the VDDR high setting
+ *
+ * This option when enabled allows the usage of +14 dBm output power, also
+ * increases power consumption.
+ */
+#ifndef CONFIG_CC26X2_CC13X2_FORCE_VDDR_HH
+#define CONFIG_CC26X2_CC13X2_FORCE_VDDR_HH (0)
+#endif
+
 #define __FPU_PRESENT 1U /**< Presence of FPU */
 #include "cpu_conf_cc26xx_cc13xx.h"
 

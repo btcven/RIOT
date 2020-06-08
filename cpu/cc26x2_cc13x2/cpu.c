@@ -42,3 +42,11 @@ void cpu_init(void)
     /* trigger static peripheral initialization */
     periph_init();
 }
+
+#if CONFIG_CC26X2_CC13X2_FLASH_CCFG
+
+#define CCFG_FORCE_VDDR_HH (CONFIG_CC26X2_CC13X2_FORCE_VDDR_HH)
+
+#include "startup_files/ccfg.c"
+
+#endif /* CONFIG_CC26X2_CC13X2_FLASH_CCFG */
