@@ -47,4 +47,18 @@ config CPU_MODEL
     default "cc1352r1" if CPU_MODEL_CC1352R1
     default "cc1352p1" if CPU_MODEL_CC1352P1
 
+## Specific CPU configuration
+
+menuconfig CC26X2_CC13X2_FLASH_CCFG
+    bool "Flash CCFG"
+    default n
+
+if CC26X2_CC13X2_FLASH_CCFG
+
+config CC26X2_CC13X2_FORCE_VDDR_HH
+    bool "Force VDDR_HH"
+    default n
+
+endif
+
 source "$(RIOTCPU)/cc26xx_cc13xx/Kconfig"
