@@ -20,8 +20,7 @@
 
 cc26x2_cc13x2_rf_pa_t cc26x2_cc13x2_rf_patable[] =
 {
-#if 0
-    /* TODO: this requires CCFG configuration */
+#if CONFIG_CC26X2_CC13X2_FORCE_VDDR_HH
     { .dbm = 14, .val = CC26X2_CC13X2_RF_PA_ENTRY(63, 0, 1, 0) },
 #endif
     /* 12.5 rounded to 13 */
