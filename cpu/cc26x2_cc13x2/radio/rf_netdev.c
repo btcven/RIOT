@@ -98,7 +98,6 @@ static void _rx_start(void)
 static int _send(netdev_t *dev, const iolist_t *iolist)
 {
     (void)dev;
-    DEBUG_PUTS("_send");
 
     if (rf_cmd_prop_rx_adv.status == RFC_PENDING ||
         rf_cmd_prop_rx_adv.status == RFC_ACTIVE) {
@@ -123,6 +122,11 @@ static int _send(netdev_t *dev, const iolist_t *iolist)
 
     /* Length in .15.4g PHY HDR. Includes the CRC but not the HDR itself */
     const uint16_t total_length = len + sizeof(uint16_t);
+
+    if (total_length > IEEE802154G_FRAME_LEN_MAX) {
+        return -EOVERFLOW;
+    }
+
     /*
      * Prepare the .15.4g PHY header
      * MS=0, Length MSBits=0, DW and CRC configurable
@@ -349,30 +353,22 @@ static int _set(netdev_t *netdev, netopt_t opt, const void *val, size_t len)
 
     switch (opt) {
         case NETOPT_RX_END_IRQ:
-            if (len != sizeof(netopt_enable_t)) {
-                return -EINVAL;
+            assert(len == sizeof(netopt_enable_t));
+            if (*(const netopt_enable_t *)val == NETOPT_ENABLE) {
+                RFC_DBELL_NONBUF->RFCPEIEN |= CPE_IRQ_RX_ENTRY_DONE;
             }
             else {
-                if (*(const netopt_enable_t *)val == NETOPT_ENABLE) {
-                    RFC_DBELL_NONBUF->RFCPEIEN |= CPE_IRQ_RX_ENTRY_DONE;
-                }
-                else {
-                    RFC_DBELL_NONBUF->RFCPEIEN &= ~CPE_IRQ_RX_ENTRY_DONE;
-                }
+                RFC_DBELL_NONBUF->RFCPEIEN &= ~CPE_IRQ_RX_ENTRY_DONE;
             }
             return sizeof(netopt_enable_t);
 
         case NETOPT_TX_END_IRQ:
-            if (len != sizeof(netopt_enable_t)) {
-                return -EINVAL;
+            assert(len == sizeof(netopt_enable_t));
+            if (*(const netopt_enable_t *)val == NETOPT_ENABLE) {
+                _tx_end_irq = true;
             }
             else {
-                if (*(const netopt_enable_t *)val == NETOPT_ENABLE) {
-                    _tx_end_irq = true;
-                }
-                else {
-                    _tx_end_irq = false;
-                }
+                _tx_end_irq = false;
             }
             return sizeof(netopt_enable_t);
 
@@ -382,10 +378,7 @@ static int _set(netdev_t *netdev, netopt_t opt, const void *val, size_t len)
     }
 
     if (res == -ENOTSUP) {
-        res = netdev_ieee802154_set((netdev_ieee802154_t *)netdev,
-                                    opt,
-                                    val,
-                                    len);
+        res = netdev_ieee802154_set((netdev_ieee802154_t *)netdev, opt, val, len);
     }
 
     return res;
@@ -401,41 +394,30 @@ static int _get(netdev_t *netdev, netopt_t opt, void *val, size_t max_len)
     }
 
     switch (opt) {
+        /* Only MR-FSK is supported */
         case NETOPT_IEEE802154_PHY:
-            if (max_len < sizeof(uint8_t)) {
-                return -EOVERFLOW;
-            }
-            else {
-                /* Only MR-FSK is supported */
-                *(uint8_t *)val = IEEE802154_PHY_MR_FSK;
-            }
+            assert(max_len >= sizeof(uint8_t));
+            *(uint8_t *)val = IEEE802154_PHY_MR_FSK;
             return sizeof(uint8_t);
 
         case NETOPT_RX_END_IRQ:
-            if (max_len < sizeof(netopt_enable_t)) {
-                return -EOVERFLOW;
+            assert(max_len >= sizeof(netopt_enable_t));
+            if (RFC_DBELL->RFCPEIEN & CPE_IRQ_RX_ENTRY_DONE) {
+                *(netopt_enable_t *)val = NETOPT_ENABLE;
             }
             else {
-                if (RFC_DBELL->RFCPEIEN & CPE_IRQ_RX_ENTRY_DONE) {
-                    *(netopt_enable_t *)val = NETOPT_ENABLE;
-                }
-                else {
-                    *(netopt_enable_t *)val = NETOPT_DISABLE;
-                }
+                *(netopt_enable_t *)val = NETOPT_DISABLE;
             }
             return sizeof(netopt_enable_t);
 
         case NETOPT_TX_END_IRQ:
+            assert(max_len >= sizeof(netopt_enable_t));
             if (max_len < sizeof(netopt_enable_t)) {
                 return -EOVERFLOW;
             }
             else {
-                if (_tx_end_irq) {
-                    *(netopt_enable_t *)val = NETOPT_ENABLE;
-                }
-                else {
-                    *(netopt_enable_t *)val = NETOPT_DISABLE;
-                }
+                *(netopt_enable_t *)val = _tx_end_irq ? NETOPT_ENABLE :
+                                                        NETOPT_DISABLE;
             }
             return sizeof(netopt_enable_t);
 
