@@ -108,7 +108,15 @@ static void _rx_start(void)
     rf_cmd_prop_rx_adv.status = RFC_IDLE;
     cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_prop_rx_adv);
     if ((cmdsta & 0xff) != RFC_CMDSTA_DONE) {
-        DEBUG_PUTS("_rx_start: RX failed");
+        if ((cmdsta & 0xFF) == RFC_CMDSTA_SCHEDULINGERROR) {
+            cc26x2_cc13x2_rfc_abort_cmd();
+            mutex_lock(&_last_cmd);
+        }
+
+        cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_prop_rx_adv);
+        if ((cmdsta & 0xff) != RFC_CMDSTA_DONE) {
+            DEBUG_PUTS("_rx_start: RX failed");
+        }
     }
 }
 
