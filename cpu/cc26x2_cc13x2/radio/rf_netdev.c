@@ -33,8 +33,13 @@
 
 #include "cpu.h"
 
-#define TX_BUF_SIZE  (IEEE802154_PHY_MR_FSK_PHR_LEN + IEEE802154G_FRAME_LEN_MAX)
-#define RX_BUF_SIZE  (IEEE802154G_FRAME_LEN_MAX + sizeof(rfc_data_entry_t) + 1)
+/**
+ * @brief    Align a buffer size to a 4-byte boundary
+ */
+#define ALIGN_TO_4(size) (((size) + 3) & ~3)
+
+#define TX_BUF_SIZE  ALIGN_TO_4(IEEE802154_PHY_MR_FSK_PHR_LEN + IEEE802154G_FRAME_LEN_MAX)
+#define RX_BUF_SIZE  ALIGN_TO_4(IEEE802154G_FRAME_LEN_MAX + sizeof(rfc_data_entry_t))
 #define RX_BUF_NUMOF (CONFIG_CC26x2_CC13X2_RF_RX_BUF_NUMOF)
 
 /**
@@ -87,9 +92,21 @@ static void _rfc_isr(void)
 static void _rx_start(void)
 {
     DEBUG_PUTS("_rx_start()");
-    /* Start RX */
-    uint32_t cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_prop_rx_adv);
+    uint32_t cmdsta;
 
+    /* Clear queue */
+    if (rf_cmd_prop_rx_adv.status == RFC_PROP_ERROR_RXBUF &&
+        _netdev->rx_events == 0) {
+        rf_cmd_clear_rx.queue = &_rx_queue;
+        cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_clear_rx);
+        if ((cmdsta & 0xff) != RFC_CMDSTA_DONE) {
+            DEBUG_PUTS("_rx_start: CLEAR_RX failed");
+        }
+    }
+
+    /* Start RX */
+    rf_cmd_prop_rx_adv.status = RFC_IDLE;
+    cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_prop_rx_adv);
     if ((cmdsta & 0xff) != RFC_CMDSTA_DONE) {
         DEBUG_PUTS("_rx_start: RX failed");
     }
@@ -138,15 +155,23 @@ static int _send(netdev_t *dev, const iolist_t *iolist)
     _tx_buf[0] = ((total_length >> 0) & 0xFF);
     _tx_buf[1] = ((total_length >> 8) & 0xFF) + 0x08 + 0x10;
 
-    rf_cmd_prop_tx_adv.status = RFC_PENDING;
+    rf_cmd_prop_tx_adv.status = RFC_IDLE;
     rf_cmd_prop_tx_adv.pkt = _tx_buf;
     rf_cmd_prop_tx_adv.pkt_len = IEEE802154_PHY_MR_FSK_PHR_LEN + len;
 
     uint32_t cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_prop_tx_adv);
     if ((cmdsta & 0xFF) != RFC_CMDSTA_DONE) {
-        DEBUG_PUTS("_send: TX send failed!");
-        rf_cmd_prop_tx_adv.status = RFC_IDLE;
-        return -EIO;
+        if ((cmdsta & 0xFF) == RFC_CMDSTA_SCHEDULINGERROR) {
+            cc26x2_cc13x2_rfc_abort_cmd();
+            mutex_lock(&_last_cmd);
+        }
+
+        cmdsta = cc26x2_cc13x2_rfc_send_cmd((rfc_op_t *)&rf_cmd_prop_tx_adv);
+        if ((cmdsta & 0xFF) != RFC_CMDSTA_DONE) {
+            DEBUG_PUTS("_send: TX send failed!");
+            rf_cmd_prop_tx_adv.status = RFC_IDLE;
+            return -EIO;
+        }
     }
     mutex_lock(&_last_cmd);
 
@@ -214,6 +239,7 @@ static int _recv(netdev_t *dev, void *buf, size_t len, void *info)
     }
 
     if (payload_len > len) {
+        entry->status = RFC_DATA_ENTRY_PENDING;
         irq_restore(key);
         return -ENOSPC;
     }
@@ -433,12 +459,12 @@ static void _isr(netdev_t *netdev)
 {
     cc26x2_cc13x2_rf_netdev_t *dev = (cc26x2_cc13x2_rf_netdev_t *)netdev;
 
-    if (dev->rx_events > 0) {
+    while (dev->rx_events) {
         dev->rx_events--;
         netdev->event_callback(netdev, NETDEV_EVENT_RX_COMPLETE);
     }
 
-    if (dev->tx_events > 0) {
+    while (dev->tx_events) {
         dev->tx_events--;
         netdev->event_callback(netdev, NETDEV_EVENT_TX_COMPLETE);
     }

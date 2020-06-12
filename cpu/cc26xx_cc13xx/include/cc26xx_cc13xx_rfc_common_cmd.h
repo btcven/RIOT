@@ -22,6 +22,7 @@
 #include <stdint.h>
 
 #include "cc26xx_cc13xx_rfc_mailbox.h"
+#include "cc26xx_cc13xx_rfc_queue.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -162,6 +163,21 @@ typedef struct {
                            value the RAT would have had when the RTC was zero.
                            This parameter is returned by CMD_SYNC_STOP_RAT */
 } rfc_cmd_sync_start_rat_t;
+/** @} */
+
+/**
+ * @brief   CMD_CLEAR_RX
+ * @{
+ */
+#define RFC_CMD_CLEAR_RX (0x0008)
+/**
+ * @brief   Clear all RX Queue Entries
+ */
+typedef struct {
+   uint16_t command_no; /**< The command ID number */
+   uint16_t __dummy0; /**< Padding */
+   rfc_data_queue_t *queue; /**< Pointer to the queue structure to be cleared */
+} rfc_cmd_clear_rx_t;
 /** @} */
 
 #ifdef __cplusplus

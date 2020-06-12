@@ -72,6 +72,13 @@ extern rfc_cmd_prop_tx_adv_t rf_cmd_prop_tx_adv;
  */
 extern rfc_cmd_prop_rx_adv_t rf_cmd_prop_rx_adv;
 
+/**
+ * @brief   CMD_CLEAR_RX
+ *
+ * Clear the RX queue
+ */
+extern rfc_cmd_clear_rx_t rf_cmd_clear_rx;
+
 extern netdev_driver_t cc26x2_cc13x2_rf_driver; /**< CC13x2 netdev driver*/
 
 #define CC26X2_CC13X2_RF_PA_ENTRY(bias, gain, boost, coefficient) \

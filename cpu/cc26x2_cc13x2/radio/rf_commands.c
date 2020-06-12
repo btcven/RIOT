@@ -288,3 +288,11 @@ rfc_cmd_prop_rx_adv_t rf_cmd_prop_rx_adv =
     .queue = 0, /* set by us */
     .output = 0 /* set by us */
 };
+
+/** Command to clear the RX queue */
+rfc_cmd_clear_rx_t rf_cmd_clear_rx =
+{
+    .command_no = RFC_CMD_CLEAR_RX,
+    .__dummy0 = 0,
+    .queue = NULL /* set by us */
+};
