@@ -43,4 +43,16 @@ config CPU_MODEL
 config CPU
     default "cc26x2_cc13x2"
 
+config CC26X2_CC13X2_FLASH_CCFG
+    bool "Flash CCFG"
+    default y
+
+if CC26X2_CC13X2_FLASH_CCFG
+
+config CC26X2_CC13X2_FORCE_VDDR_HH
+    bool "Force VDDR_HH"
+    default y
+
+endif
+
 source "$(RIOTCPU)/cc26xx_cc13xx/Kconfig"
