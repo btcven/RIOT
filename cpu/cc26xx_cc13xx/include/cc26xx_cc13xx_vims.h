@@ -176,10 +176,14 @@ typedef struct {
  * @brief   FLASH register values
  * @{
  */
-#define FLASH_CFG_DIS_STANDBY    0x00000002
-#define FLASH_CFG_DIS_EFUSECLK   0x00000020
-#define FLASH_FPAC1_PSLEEPTDIS_m 0x0FFF0000
-#define FLASH_FPAC1_PSLEEPTDIS_s 16
+#define FLASH_CFG_DIS_STANDBY               0x00000002
+#define FLASH_CFG_DIS_EFUSECLK              0x00000020
+#define FLASH_FLASH_SIZE_SECTORS_m          0x000000FF
+#define FLASH_FLASH_SIZE_SECTORS_s          0
+#define FLASH_FPAC1_PSLEEPTDIS_m            0x0FFF0000
+#define FLASH_FPAC1_PSLEEPTDIS_s            16
+#define FLASH_FCFG_B0_SSIZE0_B0_SECT_SIZE_m 0x0000000F
+#define FLASH_FCFG_B0_SSIZE0_B0_SECT_SIZE_s 0
 /** @} */
 
 /**
@@ -196,6 +200,30 @@ typedef struct {
  * @brief   FLASH register bank
  */
 #define FLASH                ((flash_regs_t *) (FLASH_BASEADDR))
+
+/**
+ * @brief   Flash API address
+ */
+#define ROM_API_FLASH        ((uint32_t *) (ROM_API_TABLE[10]))
+
+/**
+ * @brief   Flash API ROM functions
+ * @{
+ */
+#define rom_flash_sector_erase \
+    ((uint32_t (*)(uint32_t sector_addr))ROM_API_FLASH[5])
+
+#define rom_flash_program \
+    ((uint32_t (*)(const uint8_t *data, uint32_t addr, \
+                   uint32_t size))ROM_API_FLASH[6])
+/** @} */
+
+/**
+ * @brief   Flash API return values
+ * @{
+ */
+#define FAPI_STATUS_SUCCESS  (0U)
+/** @} */
 
 /**
  * @brief   VIMS registers
@@ -251,7 +279,15 @@ typedef struct {
 #define VIMS_CTL_MODE_OFF        0x00000003
 #define VIMS_CTL_MODE_m          0x00000003
 
+#define VIMS_CTL_IDCODE_LB_DIS   0x00000020
+#define VIMS_CTL_SYSBUS_LB_DIS   0x00000010
+
 #define VIMS_STAT_MODE_CHANGING  0x00000008
+
+#define VIMS_STAT_MODE_GPRAM     0x00000000
+#define VIMS_STAT_MODE_CACHE     0x00000001
+#define VIMS_STAT_MODE_OFF       0x00000003
+#define VIMS_STAT_MODE_m         0x00000003
 /** @} */
 
 #ifdef __cplusplus
