@@ -53,6 +53,38 @@ extern "C" {
 /** @} */
 
 /**
+ * @brief   Flash page configuration.
+ * @{
+ */
+#define FLASHPAGE_SIZE                  (8192U)
+#define FLASHPAGE_WRITE_BLOCK_ALIGNMENT (4U)
+#define FLASHPAGE_WRITE_BLOCK_SIZE      (4U)
+
+/**
+ * @brief   The last page of the MCU holds the CCFG, writing any invalid value
+ *          could lock the MCU for any later writes.
+ *
+ * Enabling this option will allow to modify this page. For safety, this is
+ * disabled by default.
+ */
+#ifndef CONFIG_CC26XX_CC13XX_USE_CCFG_PAGE
+#define CONFIG_CC26XX_CC13XX_USE_CCFG_PAGE 0
+#endif
+
+#if CPU_VARIANT_X0
+#define CC26XX_CC13XX_FLASHPAGE_NUMOF   (16U) /**< 128 K */
+#else
+#define CC26XX_CC13XX_FLASHPAGE_NUMOF   (44U) /**< 352 K */
+#endif
+
+#if CONFIG_CC26XX_CC13XX_USE_CCFG_PAGE
+#define FLASHPAGE_NUMOF                 (CC26XX_CC13XX_FLASHPAGE_NUMOF - 1U)
+#else
+#define FLASHPAGE_NUMOF                 (CC26XX_CC13XX_FLASHPAGE_NUMOF)
+#endif
+/** @} */
+
+/**
  * @brief   CC26xx/CC13xx specific CPU configuration
  * @{
  */
